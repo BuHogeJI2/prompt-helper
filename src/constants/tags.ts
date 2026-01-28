@@ -43,4 +43,32 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     closeTag: "</OUTPUT>",
     hint: "Required output format.",
   },
+  {
+    id: "details",
+    label: "Details",
+    openTag: "<DETAILS>",
+    closeTag: "</DETAILS>",
+    hint: "Extra specifics or background.",
+  },
+  {
+    id: "issue",
+    label: "Issue",
+    openTag: "<ISSUE>",
+    closeTag: "</ISSUE>",
+    hint: "Problem statement or bug report.",
+  },
+  {
+    id: "comment",
+    label: "Comment",
+    openTag: "<COMMENT>",
+    closeTag: "</COMMENT>",
+    hint: "Notes, observations, or side remarks.",
+  },
+  {
+    id: "important-note",
+    label: "Important note",
+    openTag: "<IMPORTANT_NOTE>",
+    closeTag: "</IMPORTANT_NOTE>",
+    hint: "Critical details or warnings.",
+  },
 ];

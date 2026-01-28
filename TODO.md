@@ -1,3 +1,9 @@
-# Further changes
-- Enhance left side panel text with: details, issue, comment, important note, tags.
-- Add inline validation and error states for invalid tag names.
+# TODO
+
+## Features
+- Most popular/used tags: show a separate section with the 5 most used tags.
+- Ready templates: provide common prompt templates and allow user customization.
+
+## Design
+- Improve layout and spacing.
+- Refine the manage-tags modal UI.

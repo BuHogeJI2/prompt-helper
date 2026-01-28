@@ -1,5 +1,5 @@
-import { DEFAULT_TAGS } from "@/constants/tags";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { DEFAULT_TAGS } from "@/constants/tags";
 import type { TagDefinition } from "@/types/tags";
 
 export function loadTags() {
@@ -24,4 +24,9 @@ export function loadEditor() {
 export function saveEditor(text: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEYS.editor, text);
+}
+
+export function saveTags(tags: TagDefinition[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEYS.tags, JSON.stringify(tags));
 }
