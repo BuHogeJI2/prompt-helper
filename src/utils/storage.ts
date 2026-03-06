@@ -1,18 +1,19 @@
 import { STORAGE_KEYS } from "@/constants/storage";
-import { DEFAULT_TAGS } from "@/constants/tags";
+import { createDefaultTags } from "@/constants/tags";
 import type { TagDefinition } from "@/types/tags";
+import { normalizeStoredTags } from "@/utils/tags";
 
 export function loadTags() {
-  if (typeof window === "undefined") return DEFAULT_TAGS;
+  if (typeof window === "undefined") return createDefaultTags();
 
   const raw = window.localStorage.getItem(STORAGE_KEYS.tags);
-  if (!raw) return DEFAULT_TAGS;
+  if (!raw) return createDefaultTags();
 
   try {
     const parsed = JSON.parse(raw) as TagDefinition[];
-    return parsed.length ? parsed : DEFAULT_TAGS;
+    return normalizeStoredTags(parsed);
   } catch {
-    return DEFAULT_TAGS;
+    return createDefaultTags();
   }
 }
 

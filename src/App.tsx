@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import EditorPanel from "@/components/EditorPanel";
 import Header from "@/components/Header";
 import ManageTagsModal from "@/components/ManageTagsModal";
 import TagsPanel from "@/components/TagsPanel";
-import { STATUS_TIMEOUT_MS, TAG_HELP_COUNT } from "@/constants/app";
+import { STATUS_TIMEOUT_MS } from "@/constants/app";
+import { TAG_GROUPS } from "@/constants/tags";
 import type { TagDefinition } from "@/types/tags";
 import { loadEditor, loadTags, saveEditor, saveTags } from "@/utils/storage";
 
@@ -13,8 +15,10 @@ export default function App() {
   const [editorText, setEditorText] = useState<string>(() => loadEditor());
   const [status, setStatus] = useState<string>("");
   const [isManageOpen, setIsManageOpen] = useState(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingSelection = useRef<number | null>(null);
+  const statusTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     saveEditor(editorText);
@@ -36,11 +40,55 @@ export default function App() {
     });
   }, [editorText]);
 
-  const tagHelp = useMemo(() => {
-    return tags.filter((tag) => tag.hint).slice(0, TAG_HELP_COUNT);
-  }, [tags]);
+  useEffect(() => {
+    return () => {
+      if (statusTimeoutRef.current !== null) {
+        window.clearTimeout(statusTimeoutRef.current);
+      }
+    };
+  }, []);
 
-  const insertTag = (tag: TagDefinition) => {
+  const isMac = useMemo(() => {
+    if (typeof navigator === "undefined") {
+      return false;
+    }
+
+    return /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+  }, []);
+
+  const groupedTags = useMemo(
+    () =>
+      TAG_GROUPS.map((group) => ({
+        group,
+        tags: tags.filter((tag) => tag.groupId === group.id),
+      })).filter((section) => section.tags.length > 0),
+    [tags],
+  );
+
+  const shortcutMap = useMemo(
+    () =>
+      new Map(
+        tags
+          .filter((tag) => tag.shortcut)
+          .map((tag) => [tag.shortcut!.key.toUpperCase(), tag]),
+      ),
+    [tags],
+  );
+
+  const customTagsCount = useMemo(
+    () => tags.filter((tag) => tag.source === "user").length,
+    [tags],
+  );
+
+  const showStatus = useCallback((message: string) => {
+    setStatus(message);
+    if (statusTimeoutRef.current !== null) {
+      window.clearTimeout(statusTimeoutRef.current);
+    }
+    statusTimeoutRef.current = window.setTimeout(() => setStatus(""), STATUS_TIMEOUT_MS);
+  }, []);
+
+  const insertTag = useCallback((tag: TagDefinition) => {
     const el = textareaRef.current;
     const currentText = editorText;
     const selectionStart = el?.selectionStart ?? currentText.length;
@@ -54,59 +102,98 @@ export default function App() {
 
     setEditorText(nextText);
     pendingSelection.current = cursorPosition;
-  };
+  }, [editorText]);
 
   const handleCopy = async () => {
     if (!editorText.trim()) {
-      setStatus("Nothing to copy yet.");
+      showStatus("Nothing to copy yet.");
       return;
     }
     try {
       await navigator.clipboard.writeText(editorText);
-      setStatus("Copied to clipboard.");
+      showStatus("Copied to clipboard.");
     } catch {
-      setStatus("Clipboard blocked. Select and copy manually.");
+      showStatus("Clipboard blocked. Select and copy manually.");
     }
-    setTimeout(() => setStatus(""), STATUS_TIMEOUT_MS);
+  };
+
+  const requestClear = () => {
+    if (!editorText.trim()) {
+      showStatus("Editor is already empty.");
+      return;
+    }
+
+    setIsClearConfirmOpen(true);
   };
 
   const handleClear = () => {
-    if (!editorText.trim()) {
-      setStatus("Editor is already empty.");
-      setTimeout(() => setStatus(""), STATUS_TIMEOUT_MS);
-      return;
-    }
     setEditorText("");
-    setStatus("Cleared.");
-    setTimeout(() => setStatus(""), STATUS_TIMEOUT_MS);
+    setIsClearConfirmOpen(false);
+    showStatus("Editor cleared.");
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isManageOpen || isClearConfirmOpen) {
+        return;
+      }
+
+      const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
+      if (!modifierPressed || !event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const tag = shortcutMap.get(event.key.toUpperCase());
+      if (!tag) {
+        return;
+      }
+
+      event.preventDefault();
+      insertTag(tag);
+      showStatus(`${tag.label} inserted.`);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isClearConfirmOpen, isMac, isManageOpen, insertTag, shortcutMap, showStatus]);
+
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8">
+    <div className="min-h-screen bg-page px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:gap-8">
         <Header
-          status={status}
-          onCopy={handleCopy}
-          onClear={handleClear}
           onManageTags={() => setIsManageOpen(true)}
+          totalTags={tags.length}
+          customTagsCount={customTagsCount}
         />
 
-        <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <TagsPanel tags={tags} insertTag={insertTag} />
+        <div className="space-y-6">
+          <TagsPanel sections={groupedTags} insertTag={insertTag} isMac={isMac} />
           <EditorPanel
             editorText={editorText}
             setEditorText={setEditorText}
-            tagHelp={tagHelp}
             textareaRef={textareaRef}
+            status={status}
+            onCopy={handleCopy}
+            onClearRequest={requestClear}
+            isMac={isMac}
           />
         </div>
       </div>
+
       <ManageTagsModal
         isOpen={isManageOpen}
-        onClose={() => setIsManageOpen(false)}
+        onOpenChange={setIsManageOpen}
         tags={tags}
         setTags={setTags}
-        setStatus={setStatus}
+      />
+
+      <ConfirmationDialog
+        open={isClearConfirmOpen}
+        onOpenChange={setIsClearConfirmOpen}
+        title="Clear the editor?"
+        description="This removes the current prompt from the editor. Your tags stay saved."
+        confirmLabel="Clear editor"
+        onConfirm={handleClear}
       />
     </div>
   );
