@@ -44,7 +44,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "core",
     shortcut: {
       key: "T",
-      displayLabel: "Ctrl/Cmd+Shift+T",
+      displayLabel: "Alt+Shift+T",
     },
     source: "builtin",
   }),
@@ -57,7 +57,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "core",
     shortcut: {
       key: "O",
-      displayLabel: "Ctrl/Cmd+Shift+O",
+      displayLabel: "Alt+Shift+O",
     },
     source: "builtin",
   }),
@@ -70,7 +70,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "context",
     shortcut: {
       key: "R",
-      displayLabel: "Ctrl/Cmd+Shift+R",
+      displayLabel: "Alt+Shift+R",
     },
     source: "builtin",
   }),
@@ -83,7 +83,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "context",
     shortcut: {
       key: "E",
-      displayLabel: "Ctrl/Cmd+Shift+E",
+      displayLabel: "Alt+Shift+E",
     },
     source: "builtin",
   }),
@@ -96,7 +96,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "context",
     shortcut: {
       key: "D",
-      displayLabel: "Ctrl/Cmd+Shift+D",
+      displayLabel: "Alt+Shift+D",
     },
     source: "builtin",
   }),
@@ -109,7 +109,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "guardrails",
     shortcut: {
       key: "C",
-      displayLabel: "Ctrl/Cmd+Shift+C",
+      displayLabel: "Alt+Shift+C",
     },
     source: "builtin",
   }),
@@ -122,7 +122,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "guardrails",
     shortcut: {
       key: "N",
-      displayLabel: "Ctrl/Cmd+Shift+N",
+      displayLabel: "Alt+Shift+N",
     },
     source: "builtin",
   }),
@@ -135,7 +135,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "notes",
     shortcut: {
       key: "I",
-      displayLabel: "Ctrl/Cmd+Shift+I",
+      displayLabel: "Alt+Shift+I",
     },
     source: "builtin",
   }),
@@ -148,7 +148,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "notes",
     shortcut: {
       key: "M",
-      displayLabel: "Ctrl/Cmd+Shift+M",
+      displayLabel: "Alt+Shift+M",
     },
     source: "builtin",
   }),
@@ -161,7 +161,7 @@ export const DEFAULT_TAGS: TagDefinition[] = [
     groupId: "notes",
     shortcut: {
       key: "P",
-      displayLabel: "Ctrl/Cmd+Shift+P",
+      displayLabel: "Alt+Shift+P",
     },
     source: "builtin",
   }),

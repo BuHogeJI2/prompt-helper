@@ -117,7 +117,4 @@ export const normalizeStoredTags = (value: unknown) => {
   return normalized.length ? normalized : createDefaultTags();
 };
 
-export const formatShortcutLabel = (shortcut: TagShortcut, isMac: boolean) => {
-  const modifier = isMac ? "Cmd" : "Ctrl";
-  return `${modifier}+Shift+${shortcut.key.toUpperCase()}`;
-};
+export const formatShortcutLabel = (shortcut: TagShortcut) => shortcut.displayLabel;

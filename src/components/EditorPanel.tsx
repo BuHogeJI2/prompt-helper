@@ -7,7 +7,6 @@ type EditorPanelProps = {
   status: string;
   onCopy: () => void;
   onClearRequest: () => void;
-  isMac: boolean;
 };
 
 export default function EditorPanel({
@@ -17,7 +16,6 @@ export default function EditorPanel({
   status,
   onCopy,
   onClearRequest,
-  isMac,
 }: EditorPanelProps) {
   return (
     <section className="rounded-[2rem] border border-white/65 bg-white/80 p-5 shadow-panel backdrop-blur md:p-6">
@@ -59,8 +57,8 @@ export default function EditorPanel({
         <div className="space-y-1 text-sm leading-6 text-cinder/66">
           <p>{status || "Copy status and editor safety actions show here."}</p>
           <p>
-            Tip: use Shift+Enter for tight paragraphs, and {isMac ? "Cmd" : "Ctrl"}+Shift
-            +letter to insert built-in tags without leaving the editor.
+            Tip: use Shift+Enter for tight paragraphs, and Alt+Shift+letter to insert
+            built-in tags without leaving the editor.
           </p>
         </div>
 

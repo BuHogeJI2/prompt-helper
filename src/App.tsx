@@ -48,14 +48,6 @@ export default function App() {
     };
   }, []);
 
-  const isMac = useMemo(() => {
-    if (typeof navigator === "undefined") {
-      return false;
-    }
-
-    return /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
-  }, []);
-
   const groupedTags = useMemo(
     () =>
       TAG_GROUPS.map((group) => ({
@@ -138,12 +130,12 @@ export default function App() {
         return;
       }
 
-      const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
-      if (!modifierPressed || !event.shiftKey || event.altKey) {
+      if (!event.altKey || !event.shiftKey || event.metaKey || event.ctrlKey) {
         return;
       }
 
-      const tag = shortcutMap.get(event.key.toUpperCase());
+      const code = event.code.startsWith("Key") ? event.code.slice(3).toUpperCase() : "";
+      const tag = shortcutMap.get(code);
       if (!tag) {
         return;
       }
@@ -155,19 +147,19 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isClearConfirmOpen, isMac, isManageOpen, insertTag, shortcutMap, showStatus]);
+  }, [isClearConfirmOpen, isManageOpen, insertTag, shortcutMap, showStatus]);
 
   return (
-    <div className="min-h-screen bg-page px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:gap-8">
+    <div className="min-h-screen bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-5 lg:gap-6">
         <Header
           onManageTags={() => setIsManageOpen(true)}
           totalTags={tags.length}
           customTagsCount={customTagsCount}
         />
 
-        <div className="space-y-6">
-          <TagsPanel sections={groupedTags} insertTag={insertTag} isMac={isMac} />
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:items-start">
+          <TagsPanel sections={groupedTags} insertTag={insertTag} />
           <EditorPanel
             editorText={editorText}
             setEditorText={setEditorText}
@@ -175,7 +167,6 @@ export default function App() {
             status={status}
             onCopy={handleCopy}
             onClearRequest={requestClear}
-            isMac={isMac}
           />
         </div>
       </div>
