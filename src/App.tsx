@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import EditorPanel from "@/components/EditorPanel";
@@ -8,6 +8,14 @@ import TagsPanel from "@/components/TagsPanel";
 import { STATUS_TIMEOUT_MS } from "@/constants/app";
 import { TAG_GROUPS } from "@/constants/tags";
 import type { TagDefinition } from "@/types/tags";
+import type { EditorSelection } from "@/utils/editor";
+import {
+  deleteBackwardInSelection,
+  deleteForwardInSelection,
+  getSelectionOffsets,
+  replaceTextInSelection,
+  restoreSelection,
+} from "@/utils/editor";
 import { loadEditor, loadTags, saveEditor, saveTags } from "@/utils/storage";
 
 export default function App() {
@@ -16,8 +24,10 @@ export default function App() {
   const [status, setStatus] = useState<string>("");
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const pendingSelection = useRef<number | null>(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  const pendingSelection = useRef<EditorSelection | null>(null);
+  const selectionRef = useRef<EditorSelection | null>(null);
+  const isComposingRef = useRef(false);
   const statusTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -28,16 +38,22 @@ export default function App() {
     saveTags(tags);
   }, [tags]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (pendingSelection.current === null) return;
-    const pos = pendingSelection.current;
+    const selection = pendingSelection.current;
     pendingSelection.current = null;
-    requestAnimationFrame(() => {
-      const el = textareaRef.current;
-      if (!el) return;
-      el.focus();
-      el.setSelectionRange(pos, pos);
-    });
+
+    if (isComposingRef.current) {
+      return;
+    }
+
+    const el = editorRef.current;
+    if (!el) {
+      return;
+    }
+
+    el.focus();
+    restoreSelection(el, selection);
   }, [editorText]);
 
   useEffect(() => {
@@ -80,21 +96,95 @@ export default function App() {
     statusTimeoutRef.current = window.setTimeout(() => setStatus(""), STATUS_TIMEOUT_MS);
   }, []);
 
+  const getCurrentSelection = useCallback((): EditorSelection => {
+    const liveSelection = editorRef.current ? getSelectionOffsets(editorRef.current) : null;
+    const fallbackSelection = liveSelection ?? selectionRef.current;
+
+    if (fallbackSelection) {
+      return fallbackSelection;
+    }
+
+    return {
+      start: editorText.length,
+      end: editorText.length,
+    };
+  }, [editorText.length]);
+
   const insertTag = useCallback((tag: TagDefinition) => {
-    const el = textareaRef.current;
-    const currentText = editorText;
-    const selectionStart = el?.selectionStart ?? currentText.length;
-    const selectionEnd = el?.selectionEnd ?? currentText.length;
-    const before = currentText.slice(0, selectionStart);
-    const after = currentText.slice(selectionEnd);
+    const currentSelection = getCurrentSelection();
+    const start = Math.min(currentSelection.start, currentSelection.end);
+    const end = Math.max(currentSelection.start, currentSelection.end);
+    const before = editorText.slice(0, start);
+    const after = editorText.slice(end);
     const prefix = before.length === 0 || before.endsWith("\n") ? "" : "\n";
     const block = `${prefix}${tag.openTag}\n\n${tag.closeTag}\n`;
     const nextText = before + block + after;
     const cursorPosition = (before + prefix + tag.openTag + "\n").length;
 
     setEditorText(nextText);
-    pendingSelection.current = cursorPosition;
-  }, [editorText]);
+    const nextSelection = {
+      start: cursorPosition,
+      end: cursorPosition,
+    };
+    selectionRef.current = nextSelection;
+    pendingSelection.current = nextSelection;
+  }, [editorText, getCurrentSelection]);
+
+  const insertTextAtSelection = useCallback(
+    (insertedText: string) => {
+      const currentSelection = getCurrentSelection();
+      const nextState = replaceTextInSelection(editorText, currentSelection, insertedText);
+
+      setEditorText(nextState.text);
+      selectionRef.current = nextState.selection;
+      pendingSelection.current = nextState.selection;
+    },
+    [editorText, getCurrentSelection],
+  );
+
+  const deleteBackwardAtSelection = useCallback(() => {
+    const currentSelection = getCurrentSelection();
+    const nextState = deleteBackwardInSelection(editorText, currentSelection);
+
+    setEditorText(nextState.text);
+    selectionRef.current = nextState.selection;
+    pendingSelection.current = nextState.selection;
+  }, [editorText, getCurrentSelection]);
+
+  const deleteForwardAtSelection = useCallback(() => {
+    const currentSelection = getCurrentSelection();
+    const nextState = deleteForwardInSelection(editorText, currentSelection);
+
+    setEditorText(nextState.text);
+    selectionRef.current = nextState.selection;
+    pendingSelection.current = nextState.selection;
+  }, [editorText, getCurrentSelection]);
+
+  const handleEditorSelectionChange = useCallback((selection: EditorSelection | null) => {
+    selectionRef.current = selection;
+  }, []);
+
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (nextText: string, selection: EditorSelection | null) => {
+      isComposingRef.current = false;
+
+      const resolvedSelection =
+        selection ??
+        selectionRef.current ?? {
+          start: nextText.length,
+          end: nextText.length,
+        };
+
+      selectionRef.current = resolvedSelection;
+      setEditorText(nextText);
+      pendingSelection.current = resolvedSelection;
+    },
+    [],
+  );
 
   const handleCopy = async () => {
     if (!editorText.trim()) {
@@ -130,6 +220,10 @@ export default function App() {
         return;
       }
 
+      if (isComposingRef.current) {
+        return;
+      }
+
       if (!event.altKey || !event.shiftKey || event.metaKey || event.ctrlKey) {
         return;
       }
@@ -162,11 +256,17 @@ export default function App() {
           <TagsPanel sections={groupedTags} insertTag={insertTag} />
           <EditorPanel
             editorText={editorText}
-            setEditorText={setEditorText}
-            textareaRef={textareaRef}
+            editorRef={editorRef}
             status={status}
             onCopy={handleCopy}
             onClearRequest={requestClear}
+            onSelectionChange={handleEditorSelectionChange}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            onInsertLineBreak={() => insertTextAtSelection("\n")}
+            onInsertText={insertTextAtSelection}
+            onDeleteBackward={deleteBackwardAtSelection}
+            onDeleteForward={deleteForwardAtSelection}
           />
         </div>
       </div>

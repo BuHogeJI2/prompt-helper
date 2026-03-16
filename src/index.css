@@ -29,7 +29,19 @@ body {
 }
 
 code,
-textarea {
+textarea,
+[data-editor-surface="true"] {
   font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
+}
+
+.editor-surface {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.editor-surface[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: rgba(26, 23, 21, 0.42);
+  pointer-events: none;
 }

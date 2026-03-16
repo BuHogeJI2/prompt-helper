@@ -1,22 +1,61 @@
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import { Fragment, useMemo } from "react";
+import type { ClipboardEvent, RefObject } from "react";
+
+import type { EditorSelection } from "@/utils/editor";
+import { getSelectionOffsets, readPlainTextFromEditable, tokenizeEditorLine } from "@/utils/editor";
 
 type EditorPanelProps = {
   editorText: string;
-  setEditorText: Dispatch<SetStateAction<string>>;
-  textareaRef: RefObject<HTMLTextAreaElement | null> | null;
+  editorRef: RefObject<HTMLDivElement | null> | null;
   status: string;
   onCopy: () => void;
   onClearRequest: () => void;
+  onSelectionChange: (selection: EditorSelection | null) => void;
+  onCompositionStart: () => void;
+  onCompositionEnd: (text: string, selection: EditorSelection | null) => void;
+  onInsertLineBreak: () => void;
+  onInsertText: (text: string) => void;
+  onDeleteBackward: () => void;
+  onDeleteForward: () => void;
 };
 
 export default function EditorPanel({
   editorText,
-  setEditorText,
-  textareaRef,
+  editorRef,
   status,
   onCopy,
   onClearRequest,
+  onSelectionChange,
+  onCompositionStart,
+  onCompositionEnd,
+  onInsertLineBreak,
+  onInsertText,
+  onDeleteBackward,
+  onDeleteForward,
 }: EditorPanelProps) {
+  const renderedLines = useMemo(() => editorText.split("\n"), [editorText]);
+
+  const syncSelection = () => {
+    const root = editorRef?.current;
+    if (!root) {
+      onSelectionChange(null);
+      return;
+    }
+
+    onSelectionChange(getSelectionOffsets(root));
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    const plainText = event.clipboardData.getData("text/plain");
+    if (!plainText) {
+      return;
+    }
+
+    onInsertText(plainText);
+  };
+
   return (
     <section className="rounded-[2rem] border border-white/65 bg-white/80 p-5 shadow-panel backdrop-blur md:p-6">
       <div className="flex flex-col gap-4 border-b border-ink/8 pb-5 md:flex-row md:items-start md:justify-between">
@@ -45,13 +84,111 @@ export default function EditorPanel({
         </div>
       </div>
 
-      <textarea
-        ref={textareaRef}
-        value={editorText}
-        onChange={(event) => setEditorText(event.target.value)}
-        placeholder="Start with a Task block, then layer the rest of the prompt around it."
-        className="mt-5 h-[58vh] min-h-[26rem] w-full resize-none rounded-[1.65rem] border border-ink/10 bg-[#fffdf9] p-5 text-sm leading-7 text-cinder shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-ember/45 focus:outline-none focus:ring-2 focus:ring-ember/25"
-      />
+      <div
+        ref={editorRef}
+        role="textbox"
+        aria-multiline="true"
+        contentEditable
+        suppressContentEditableWarning
+        data-editor-surface="true"
+        data-empty={editorText.length === 0}
+        data-placeholder="Start with a Task block, then layer the rest of the prompt around it."
+        className="editor-surface mt-5 h-[58vh] min-h-[26rem] w-full overflow-y-auto rounded-[1.65rem] border border-ink/10 bg-[#fffdf9] p-5 text-sm leading-7 text-cinder shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-ember/45 focus:outline-none focus:ring-2 focus:ring-ember/25"
+        onBeforeInput={(event) => {
+          if (event.nativeEvent.isComposing) {
+            return;
+          }
+
+          switch (event.nativeEvent.inputType) {
+            case "insertText":
+              event.preventDefault();
+              onInsertText(event.nativeEvent.data ?? "");
+              return;
+            case "insertCompositionText":
+              return;
+            case "insertParagraph":
+            case "insertLineBreak":
+              event.preventDefault();
+              onInsertLineBreak();
+              return;
+            case "insertFromPaste":
+              event.preventDefault();
+              onInsertText(event.nativeEvent.data ?? "");
+              return;
+            case "insertReplacementText":
+              event.preventDefault();
+              onInsertText(event.nativeEvent.data ?? "");
+              return;
+            case "deleteContentBackward":
+              event.preventDefault();
+              onDeleteBackward();
+              return;
+            case "deleteContentForward":
+              event.preventDefault();
+              onDeleteForward();
+              return;
+            default:
+              event.preventDefault();
+          }
+        }}
+        onPaste={handlePaste}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onInsertLineBreak();
+            return;
+          }
+
+          if (event.key === "Backspace") {
+            event.preventDefault();
+            onDeleteBackward();
+            return;
+          }
+
+          if (event.key === "Delete") {
+            event.preventDefault();
+            onDeleteForward();
+            return;
+          }
+
+          if (
+            event.key.length === 1 &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey
+          ) {
+            event.preventDefault();
+            onInsertText(event.key);
+          }
+        }}
+        onKeyUp={syncSelection}
+        onMouseUp={syncSelection}
+        onFocus={syncSelection}
+        onBlur={syncSelection}
+        onCompositionStart={onCompositionStart}
+        onCompositionEnd={(event) => {
+          const root = event.currentTarget;
+          onCompositionEnd(readPlainTextFromEditable(root), getSelectionOffsets(root));
+        }}
+      >
+        {renderedLines.map((line, lineIndex) => {
+          const tokens = tokenizeEditorLine(line);
+
+          return (
+            <Fragment key={`line-${lineIndex}`}>
+              {tokens.map((token, tokenIndex) => (
+                <span
+                  key={`token-${lineIndex}-${tokenIndex}`}
+                  className={token.type === "tag" ? "font-semibold text-ink" : undefined}
+                >
+                  {token.value}
+                </span>
+              ))}
+              {lineIndex < renderedLines.length - 1 ? <br /> : null}
+            </Fragment>
+          );
+        })}
+      </div>
 
       <div className="mt-5 flex flex-col gap-4 rounded-[1.5rem] border border-ink/8 bg-[#fffaf4] p-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1 text-sm leading-6 text-cinder/66">
