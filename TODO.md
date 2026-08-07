@@ -1,10 +1,18 @@
 # TODO
 
-- Hotkeys for custom/user-created tags, including a safe shortcut assignment UI.
-- Most popular/used tags: show a separate section with the 5 most used tags.
-- Drag-and-drop tag reordering inside groups.
-- Tag search/filter for large custom tag sets.
-- Import/export tags and prompt presets.
-- Undo/redo support for editor actions like insert, clear, and delete.
-- Better mobile tag-palette behavior if grouped tags become too dense on small screens.
-- Optional "recent tags" section based on actual insertion history.
+## Data safety
+
+- Add tag deletion confirmation or a short-lived undo action.
+- Reject duplicate tag labels and generated tag pairs.
+- Warn before closing the tag manager with unsaved changes.
+- Catch local storage write failures and show a persistent warning when changes cannot be saved.
+
+## Core product
+
+- Add accessible tag reordering inside groups with drag handles, keyboard move controls, persisted order, and screen-reader announcements.
+- Add structured-prompt validation for unmatched, incorrectly nested, empty, and unknown tags, with a warning before copying invalid prompts.
+
+## Quality
+
+- Add Playwright coverage for native editor input, caret placement after tag insertion, modal focus behavior, and the core mobile layout.
+- Add CI checks for tests, lint, typecheck, and production build on every pull request.
