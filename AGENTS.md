@@ -12,7 +12,7 @@ Prompt Helper is a React + TypeScript SPA for composing AI prompts with structur
 - Cursor is repositioned between tags after insertion.
 - Direct editing uses native textarea behavior for new lines, selection, paste, undo, and IME input.
 - Built-in tags are grouped by intent and expose `Alt + Shift + Letter` shortcuts.
-- Clearing the editor and resetting tags to defaults both require confirmation.
+- Clearing the editor, deleting a tag, and resetting tags to defaults require confirmation.
 - Editor content and tag definitions are persisted to local storage.
 
 ## Local storage keys

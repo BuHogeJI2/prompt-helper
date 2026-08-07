@@ -8,7 +8,7 @@ Prompt Helper is a lightweight React + TypeScript single-page app for composing 
 - Native textarea editing with reliable new lines, selection, paste, undo, and IME input
 - Tag insertion on a new line with the cursor placed inside the generated pair
 - `Alt+Shift+letter` shortcuts for built-in tags
-- Create, edit, delete, and reset tag definitions
+- Create, edit, safely delete, and reset tag definitions
 - One-click copy to clipboard
 - Local storage persistence for editor content and tag definitions
 
