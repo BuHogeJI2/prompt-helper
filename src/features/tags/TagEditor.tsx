@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type RefObject, useMemo } from "react";
 
 import type { ITagDraft } from "@/features/tags/types";
 import type { TagDefinition } from "@/types/tags";
@@ -8,6 +8,8 @@ interface ITagEditorProps {
   selectedTag: TagDefinition | null;
   draft: ITagDraft;
   feedback: string;
+  tagInputRef: RefObject<HTMLInputElement | null>;
+  onBack: () => void;
   onDraftChange: (draft: ITagDraft) => void;
   onSubmit: () => void;
   onDelete: () => void;
@@ -18,6 +20,8 @@ export default function TagEditor({
   selectedTag,
   draft,
   feedback,
+  tagInputRef,
+  onBack,
   onDraftChange,
   onSubmit,
   onDelete,
@@ -28,9 +32,17 @@ export default function TagEditor({
   return (
     <div className="p-5 md:p-6">
       <div className="flex flex-col gap-6">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex w-fit items-center rounded-full border border-ink/12 bg-white px-3.5 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none md:hidden"
+        >
+          <span aria-hidden="true">←</span>&nbsp; All tags
+        </button>
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cinder/45">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cinder/65">
               {selectedTag ? "Edit tag" : "New tag"}
             </p>
             <h3 className="mt-1 text-xl font-semibold text-cinder">
@@ -60,6 +72,7 @@ export default function TagEditor({
             <label className="block text-sm font-semibold text-cinder">
               Tag
               <input
+                ref={tagInputRef}
                 value={draft.label}
                 onChange={(event) => onDraftChange({ ...draft, label: event.target.value })}
                 placeholder="Example: Writing brief"
@@ -81,7 +94,7 @@ export default function TagEditor({
             <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
-                className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ember/92 focus:outline-none focus:ring-2 focus:ring-ember/30"
+                className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-ember/85 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none"
               >
                 {selectedTag ? "Save changes" : "Add tag"}
               </button>
@@ -89,7 +102,7 @@ export default function TagEditor({
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="rounded-full border border-rose-300 bg-white px-5 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300/50"
+                  className="rounded-full border border-rose-300 bg-white px-5 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300/50 motion-reduce:transition-none"
                 >
                   Delete tag
                 </button>
@@ -99,17 +112,17 @@ export default function TagEditor({
 
           <div className="space-y-4 rounded-[1.5rem] border border-ink/10 bg-white p-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cinder/45">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cinder/65">
                 Generated pair
               </p>
-              <p className="mt-2 text-sm leading-6 text-cinder/63">
+              <p className="mt-2 text-sm leading-6 text-cinder/70">
                 Open and close tags are always derived automatically from the tag name.
               </p>
             </div>
 
             <div className="space-y-3 rounded-[1.2rem] bg-[#f7f2e8] p-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/45">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/65">
                   Open
                 </p>
                 <code className="mt-1 block text-sm text-cinder">
@@ -117,7 +130,7 @@ export default function TagEditor({
                 </code>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/45">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/65">
                   Close
                 </p>
                 <code className="mt-1 block text-sm text-cinder">
@@ -128,13 +141,13 @@ export default function TagEditor({
 
             <div className="rounded-[1.2rem] border border-ink/10 bg-[#fffaf2] p-4">
               <p className="text-sm font-semibold text-cinder">Reset defaults</p>
-              <p className="mt-2 text-sm leading-6 text-cinder/63">
+              <p className="mt-2 text-sm leading-6 text-cinder/70">
                 This restores the built-in tag set and removes custom tags and edits.
               </p>
               <button
                 type="button"
                 onClick={onResetRequest}
-                className="mt-4 rounded-full border border-ink/12 bg-white px-4 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30"
+                className="mt-4 rounded-full border border-ink/12 bg-white px-4 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none"
               >
                 Reset defaults
               </button>

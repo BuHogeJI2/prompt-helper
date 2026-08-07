@@ -65,15 +65,19 @@ export default function App() {
         />
 
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:items-start">
-          <TagsPanel sections={sections} onInsertTag={insertTag} />
-          <EditorPanel
-            editorText={editorText}
-            editorRef={editorRef}
-            status={status}
-            onEditorTextChange={updateEditorText}
-            onCopy={copyPrompt}
-            onClearRequest={requestClear}
-          />
+          <div className="order-1 xl:order-2">
+            <EditorPanel
+              editorText={editorText}
+              editorRef={editorRef}
+              status={status}
+              onEditorTextChange={updateEditorText}
+              onCopy={copyPrompt}
+              onClearRequest={requestClear}
+            />
+          </div>
+          <div className="order-2 xl:order-1">
+            <TagsPanel sections={sections} onInsertTag={insertTag} />
+          </div>
         </div>
       </div>
 

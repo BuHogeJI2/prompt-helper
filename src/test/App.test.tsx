@@ -101,6 +101,10 @@ describe("Prompt Helper", () => {
 
     expect(editor).toHaveValue("First\nSecond");
     expect(writeText).toHaveBeenCalledWith("First\nSecond");
+    expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard.");
+    expect(
+      screen.queryByText("Copy status and editor safety actions show here."),
+    ).not.toBeInTheDocument();
   });
 
   it("clears editor content only after confirmation", async () => {
@@ -125,7 +129,12 @@ describe("Prompt Helper", () => {
 
     await user.click(screen.getByRole("button", { name: "Manage tags" }));
     const dialog = screen.getByRole("dialog", { name: "Manage tags" });
+    const createButton = within(dialog).getByRole("button", { name: /Create new tag/ });
+    expect(createButton).toHaveFocus();
+
+    await user.click(createButton);
     const tagInput = within(dialog).getByRole("textbox", { name: "Tag" });
+    expect(tagInput).toHaveFocus();
 
     await user.type(tagInput, "Writing brief");
     await user.type(within(dialog).getByRole("textbox", { name: "Hint" }), "Draft guidance");
@@ -146,12 +155,39 @@ describe("Prompt Helper", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Delete tag" }));
 
+    const deleteConfirmation = screen.getByRole("alertdialog", {
+      name: "Delete Updated brief?",
+    });
+    const storedBeforeConfirmation = JSON.parse(
+      window.localStorage.getItem(STORAGE_KEYS.tags) ?? "[]",
+    ) as Array<{ source: string }>;
+    expect(storedBeforeConfirmation.some((tag) => tag.source === "user")).toBe(true);
+
+    await user.click(within(deleteConfirmation).getByRole("button", { name: "Delete tag" }));
+
     await waitFor(() => {
       const storedTags = JSON.parse(
         window.localStorage.getItem(STORAGE_KEYS.tags) ?? "[]",
       ) as Array<{ source: string }>;
       expect(storedTags.some((tag) => tag.source === "user")).toBe(false);
     });
+    expect(createButton).toHaveFocus();
+  });
+
+  it("moves focus between the tag list and editor views", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Manage tags" }));
+    const dialog = screen.getByRole("dialog", { name: "Manage tags" });
+    const createButton = within(dialog).getByRole("button", { name: /Create new tag/ });
+    const taskButton = within(dialog).getByRole("button", { name: /^Task/ });
+
+    await user.click(taskButton);
+    expect(within(dialog).getByRole("textbox", { name: "Tag" })).toHaveFocus();
+
+    await user.click(within(dialog).getByRole("button", { name: "All tags" }));
+    expect(createButton).toHaveFocus();
   });
 
   it("resets stored tags only after confirmation", async () => {

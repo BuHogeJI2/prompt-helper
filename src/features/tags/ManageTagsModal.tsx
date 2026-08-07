@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import TagEditor from "@/features/tags/TagEditor";
@@ -35,7 +35,11 @@ export default function ManageTagsModal({
 }: IManageTagsModalProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [isEditorView, setIsEditorView] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const createButtonRef = useRef<HTMLButtonElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
   const { status: feedback, showStatus, clearStatus } = useTransientStatus();
 
   const selectedTag = useMemo(
@@ -48,19 +52,45 @@ export default function ManageTagsModal({
     setDraft(EMPTY_DRAFT);
   };
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    if (isEditorView) {
+      tagInputRef.current?.focus();
+      return;
+    }
+
+    createButtonRef.current?.focus();
+  }, [isEditorView, isOpen, selectedId]);
+
   const handleOpenChange = (open: boolean) => {
     onOpenChange(open);
 
     if (!open) {
       resetEditor();
+      setIsEditorView(false);
       clearStatus();
+      setIsDeleteConfirmOpen(false);
       setIsResetConfirmOpen(false);
     }
+  };
+
+  const handleCreateNew = () => {
+    resetEditor();
+    clearStatus();
+    setIsEditorView(true);
   };
 
   const handleSelectTag = (tag: TagDefinition) => {
     setSelectedId(tag.id);
     setDraft({ label: tag.label, hint: tag.hint ?? "" });
+    clearStatus();
+    setIsEditorView(true);
+  };
+
+  const handleBackToList = () => {
+    clearStatus();
+    setIsEditorView(false);
   };
 
   const handleSubmit = () => {
@@ -89,12 +119,15 @@ export default function ManageTagsModal({
     if (!selectedId) return;
     onDeleteTag(selectedId);
     resetEditor();
+    setIsEditorView(false);
+    setIsDeleteConfirmOpen(false);
     showStatus("Tag deleted.");
   };
 
   const handleReset = () => {
     onResetTags();
     resetEditor();
+    setIsEditorView(false);
     setIsResetConfirmOpen(false);
     showStatus("Default tags restored.");
   };
@@ -104,42 +137,68 @@ export default function ManageTagsModal({
       <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88vh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border border-white/40 bg-[#fcf7ef] shadow-[0_40px_90px_-45px_rgba(13,27,30,0.62)] focus:outline-none">
+          <Dialog.Content
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              createButtonRef.current?.focus();
+            }}
+            className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88vh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border border-white/40 bg-[#fcf7ef] shadow-[0_40px_90px_-45px_rgba(13,27,30,0.62)] focus:outline-none"
+          >
             <div className="flex items-start justify-between gap-4 border-b border-ink/8 px-5 py-5 md:px-6">
               <div className="space-y-2">
                 <Dialog.Title className="text-2xl font-semibold text-cinder">
                   Manage tags
                 </Dialog.Title>
-                <Dialog.Description className="max-w-2xl text-sm leading-6 text-cinder/66">
-                  Edit any saved tag, create a new one from the same form, or reset the collection
-                  back to the built-in defaults.
+                <Dialog.Description className="max-w-2xl text-sm leading-6 text-cinder/70">
+                  Create, edit, delete, or restore prompt blocks.
                 </Dialog.Description>
               </div>
-              <Dialog.Close className="rounded-full border border-ink/12 bg-white px-3 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30">
+              <Dialog.Close className="rounded-full border border-ink/12 bg-white px-3 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none">
                 Close
               </Dialog.Close>
             </div>
 
-            <div className="grid gap-0 overflow-y-auto md:grid-cols-[18rem_minmax(0,1fr)]">
-              <TagList
-                tags={tags}
-                selectedId={selectedId}
-                onCreateNew={resetEditor}
-                onSelectTag={handleSelectTag}
-              />
-              <TagEditor
-                selectedTag={selectedTag}
-                draft={draft}
-                feedback={feedback}
-                onDraftChange={setDraft}
-                onSubmit={handleSubmit}
-                onDelete={handleDelete}
-                onResetRequest={() => setIsResetConfirmOpen(true)}
-              />
+            <div className="grid min-h-0 flex-1 gap-0 overflow-hidden md:grid-cols-[18rem_minmax(0,1fr)]">
+              <div
+                className={`${isEditorView ? "hidden" : "block"} min-h-0 overflow-y-auto md:block`}
+              >
+                <TagList
+                  tags={tags}
+                  selectedId={selectedId}
+                  createButtonRef={createButtonRef}
+                  onCreateNew={handleCreateNew}
+                  onSelectTag={handleSelectTag}
+                />
+              </div>
+              <div
+                className={`${isEditorView ? "block" : "hidden"} min-h-0 overflow-y-auto md:block`}
+              >
+                <TagEditor
+                  selectedTag={selectedTag}
+                  draft={draft}
+                  feedback={feedback}
+                  tagInputRef={tagInputRef}
+                  onBack={handleBackToList}
+                  onDraftChange={setDraft}
+                  onSubmit={handleSubmit}
+                  onDelete={() => setIsDeleteConfirmOpen(true)}
+                  onResetRequest={() => setIsResetConfirmOpen(true)}
+                />
+              </div>
             </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+
+      <ConfirmationDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title={`Delete ${selectedTag?.label ?? "this tag"}?`}
+        description="This removes the tag from the palette and cannot be undone. Your editor content will not change."
+        confirmLabel="Delete tag"
+        onConfirm={handleDelete}
+        confirmFocusRef={createButtonRef}
+      />
 
       <ConfirmationDialog
         open={isResetConfirmOpen}
@@ -148,6 +207,7 @@ export default function ManageTagsModal({
         description="This will remove custom tags and revert edited built-in tags back to the default set."
         confirmLabel="Reset tags"
         onConfirm={handleReset}
+        confirmFocusRef={createButtonRef}
       />
     </>
   );
