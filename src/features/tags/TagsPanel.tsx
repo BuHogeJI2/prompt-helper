@@ -1,19 +1,15 @@
 import * as Accordion from "@radix-ui/react-accordion";
 
-import type { TagDefinition, TagGroup } from "@/types/tags";
+import type { ITagSection } from "@/features/tags/types";
+import type { TagDefinition } from "@/types/tags";
 import { formatShortcutLabel } from "@/utils/tags";
 
-type TagSection = {
-  group: TagGroup;
-  tags: TagDefinition[];
-};
+interface ITagsPanelProps {
+  sections: ITagSection[];
+  onInsertTag: (tag: TagDefinition) => void;
+}
 
-type TagsPanelProps = {
-  sections: TagSection[];
-  insertTag: (tag: TagDefinition) => void;
-};
-
-export default function TagsPanel({ sections, insertTag }: TagsPanelProps) {
+export default function TagsPanel({ sections, onInsertTag }: ITagsPanelProps) {
   return (
     <section className="rounded-[1.7rem] border border-white/60 bg-white/75 p-4 shadow-panel backdrop-blur md:p-5">
       <div className="flex flex-col gap-2.5 md:flex-row md:items-end md:justify-between">
@@ -24,9 +20,8 @@ export default function TagsPanel({ sections, insertTag }: TagsPanelProps) {
           <div>
             <h2 className="text-xl font-semibold text-cinder">Keep the structure visible.</h2>
             <p className="max-w-2xl text-sm leading-6 text-cinder/68">
-              Built-in tags are grouped by intent and stay one click away. Shortcuts mirror
-              the same blocks, so the editor stays fast without hiding the palette behind a
-              scrolling panel.
+              Built-in tags are grouped by intent and stay one click away. Shortcuts mirror the same
+              blocks, so the editor stays fast without hiding the palette behind a scrolling panel.
             </p>
           </div>
         </div>
@@ -35,11 +30,7 @@ export default function TagsPanel({ sections, insertTag }: TagsPanelProps) {
         </div>
       </div>
 
-      <Accordion.Root
-        type="multiple"
-        defaultValue={["core"]}
-        className="mt-4 space-y-2.5"
-      >
+      <Accordion.Root type="multiple" defaultValue={["core"]} className="mt-4 space-y-2.5">
         {sections.map((section) => (
           <Accordion.Item
             key={section.group.id}
@@ -50,7 +41,9 @@ export default function TagsPanel({ sections, insertTag }: TagsPanelProps) {
               <Accordion.Trigger className="group flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:bg-white/80 md:px-5">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-base font-semibold text-cinder">{section.group.title}</span>
+                    <span className="text-base font-semibold text-cinder">
+                      {section.group.title}
+                    </span>
                     <span className="rounded-full border border-ink/10 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cinder/45">
                       {section.tags.length}
                     </span>
@@ -73,7 +66,7 @@ export default function TagsPanel({ sections, insertTag }: TagsPanelProps) {
                     <button
                       key={tag.id}
                       type="button"
-                      onClick={() => insertTag(tag)}
+                      onClick={() => onInsertTag(tag)}
                       className="group flex min-h-[7.25rem] flex-col rounded-[1.15rem] border border-ink/10 bg-white px-3.5 py-3 text-left transition hover:-translate-y-0.5 hover:border-ember/35 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-ember/30"
                     >
                       <div className="flex flex-col items-start gap-2">
