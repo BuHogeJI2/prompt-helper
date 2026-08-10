@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +7,53 @@ import { STORAGE_KEYS } from "@/constants/storage";
 import { createDefaultTags } from "@/constants/tags";
 
 const getEditor = () => screen.getByRole("textbox", { name: "Prompt editor" });
+
+const createMediaQueryList = (query: string, matches: boolean): MediaQueryList => ({
+  matches,
+  media: query,
+  onchange: null,
+  addEventListener() {},
+  removeEventListener() {},
+  addListener() {},
+  removeListener() {},
+  dispatchEvent: () => false,
+});
+
+const mockDesktopMedia = (matches: boolean) => {
+  vi.mocked(window.matchMedia).mockImplementation((query) =>
+    createMediaQueryList(query, query === "(min-width: 1024px)" && matches),
+  );
+};
+
+const installDesktopMediaController = (initialMatches: boolean) => {
+  let matches = initialMatches;
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const query = "(min-width: 1024px)";
+  const mediaQuery = {
+    get matches() {
+      return matches;
+    },
+    media: query,
+    onchange: null,
+    addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+      listeners.add(listener as (event: MediaQueryListEvent) => void);
+    },
+    removeEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+      listeners.delete(listener as (event: MediaQueryListEvent) => void);
+    },
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  } as MediaQueryList;
+
+  vi.mocked(window.matchMedia).mockImplementation(() => mediaQuery);
+
+  return (nextMatches: boolean) => {
+    matches = nextMatches;
+    const event = { matches, media: query } as MediaQueryListEvent;
+    listeners.forEach((listener) => listener(event));
+  };
+};
 
 const createRect = (left: number, top: number, width: number, height: number): DOMRect => ({
   x: left,
@@ -42,6 +89,8 @@ const getTagOrder = (groupTitle: string) =>
 describe("Prompt Helper", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.spyOn(window, "matchMedia");
+    mockDesktopMedia(true);
   });
 
   afterEach(() => {
@@ -411,5 +460,138 @@ describe("Prompt Helper", () => {
     });
 
     expect(editor).toHaveValue("");
+  });
+
+  it("keeps the editor visible with persisted Core quick tags on smaller screens", async () => {
+    mockDesktopMedia(false);
+    const defaultTags = createDefaultTags();
+    const reorderedTags = [
+      defaultTags.find((tag) => tag.id === "output")!,
+      defaultTags.find((tag) => tag.id === "task")!,
+      ...defaultTags.filter((tag) => tag.id !== "output" && tag.id !== "task"),
+    ];
+    window.localStorage.setItem(STORAGE_KEYS.tags, JSON.stringify(reorderedTags));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const launcher = screen.getByRole("region", { name: "Prompt block shortcuts" });
+    const quickButtons = within(launcher).getAllByRole("button", { name: /Insert .+ block/ });
+    expect(quickButtons.map((button) => button.textContent)).toEqual(["<OUTPUT>", "<TASK>"]);
+    expect(getEditor()).toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "Core blocks prompt blocks" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(quickButtons[0]);
+
+    expect(getEditor()).toHaveValue("<OUTPUT>\n\n</OUTPUT>\n");
+    expect(getEditor()).toHaveFocus();
+  });
+
+  it("opens one full mobile palette and closes into the editor after insertion", async () => {
+    mockDesktopMedia(false);
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+
+    await user.type(editor, "Keep this");
+    editor.setSelectionRange(4, 4);
+    await user.click(screen.getByRole("button", { name: "All blocks" }));
+
+    const drawer = screen.getByRole("dialog", { name: "All blocks" });
+    expect(
+      within(drawer).getByRole("list", { name: "Core blocks prompt blocks" }),
+    ).toBeInTheDocument();
+    const taskHandle = within(drawer).getByRole("button", { name: "Reorder Task block" });
+    expect(drawer).toContainElement(
+      document.getElementById(taskHandle.getAttribute("aria-describedby") ?? ""),
+    );
+    expect(screen.getAllByRole("list", { name: "Core blocks prompt blocks" })).toHaveLength(1);
+    await waitFor(() =>
+      expect(document.querySelectorAll("#dnd-kit-announcement-tag-order-core")).toHaveLength(1),
+    );
+
+    await user.click(within(drawer).getByRole("button", { name: "Insert Task block" }));
+
+    await waitFor(() => expect(drawer).not.toBeInTheDocument());
+    expect(editor).toHaveValue("Keep\n<TASK>\n\n</TASK>\n this");
+    expect(editor.selectionStart).toBe(12);
+    expect(editor.selectionEnd).toBe(12);
+    await waitFor(() => expect(editor).toHaveFocus());
+  });
+
+  it("returns focus to the mobile launcher when the drawer is dismissed", async () => {
+    mockDesktopMedia(false);
+    const user = userEvent.setup();
+    render(<App />);
+    const trigger = screen.getByRole("button", { name: "All blocks" });
+
+    await user.click(trigger);
+    await user.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "All blocks" })).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
+
+  it("disables global tag hotkeys while the mobile drawer is open", async () => {
+    mockDesktopMedia(false);
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+
+    await user.click(screen.getByRole("button", { name: "All blocks" }));
+    fireEvent.keyDown(window, {
+      key: "T",
+      code: "KeyT",
+      altKey: true,
+      shiftKey: true,
+    });
+
+    expect(editor).toHaveValue("");
+  });
+
+  it("cancels keyboard reordering without dismissing the mobile drawer", async () => {
+    mockDesktopMedia(false);
+    mockTagCardLayout();
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "All blocks" }));
+    const drawer = screen.getByRole("dialog", { name: "All blocks" });
+    const taskHandle = within(drawer).getByRole("button", { name: "Reorder Task block" });
+
+    taskHandle.focus();
+    await user.keyboard("[Space]");
+    await waitFor(() => expect(taskHandle).toHaveAttribute("aria-grabbed", "true"));
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Escape}");
+
+    expect(drawer).toBeInTheDocument();
+    await waitFor(() => expect(getTagOrder("Core blocks")).toEqual(["task", "output"]));
+    expect(window.localStorage.getItem(STORAGE_KEYS.tags)).toContain('"id":"task"');
+  });
+
+  it("resets the mobile drawer when crossing the desktop breakpoint", async () => {
+    const setDesktopMatches = installDesktopMediaController(false);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "All blocks" }));
+    expect(screen.getByRole("dialog", { name: "All blocks" })).toBeInTheDocument();
+
+    act(() => setDesktopMatches(true));
+    expect(screen.queryByRole("button", { name: "All blocks" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "All blocks" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Prompt blocks" })).toBeInTheDocument();
+
+    act(() => setDesktopMatches(false));
+    expect(screen.getByRole("button", { name: "All blocks" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByRole("dialog", { name: "All blocks" })).not.toBeInTheDocument();
   });
 });

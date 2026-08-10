@@ -91,6 +91,7 @@ export default function SortableTagGroup({
   );
   const handleElements = useRef(new Map<string, HTMLButtonElement>());
   const isReorderable = section.tags.length > 1;
+  const instructionId = `tag-order-instructions-${section.group.id}`;
 
   const registerHandle = useCallback((tagId: string, element: HTMLButtonElement | null) => {
     if (element) {
@@ -130,6 +131,10 @@ export default function SortableTagGroup({
       ]}
       onDragEnd={handleDragEnd}
     >
+      <span id={instructionId} className="sr-only">
+        To reorder a prompt block, press Space or Enter on its reorder handle, move it with the
+        arrow keys, then press Space or Enter to drop it. Press Escape to cancel.
+      </span>
       <ul aria-label={`${section.group.title} prompt blocks`} className="space-y-1.5">
         {section.tags.map((tag, index) => (
           <SortableTagCard
@@ -139,6 +144,7 @@ export default function SortableTagGroup({
             groupTitle={section.group.title}
             itemCount={section.tags.length}
             isReorderable={isReorderable}
+            instructionId={instructionId}
             onInsertTag={onInsertTag}
             onHandleRef={registerHandle}
           />

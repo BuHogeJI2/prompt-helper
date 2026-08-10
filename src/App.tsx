@@ -5,14 +5,18 @@ import Header from "@/components/Header";
 import EditorPanel from "@/features/editor/EditorPanel";
 import { usePromptEditor } from "@/features/editor/usePromptEditor";
 import ManageTagsModal from "@/features/tags/ManageTagsModal";
+import MobileTagsDrawer from "@/features/tags/MobileTagsDrawer";
 import TagsPanel from "@/features/tags/TagsPanel";
 import { useTagCollection } from "@/features/tags/useTagCollection";
 import { useTagHotkeys } from "@/features/tags/useTagHotkeys";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { TagDefinition } from "@/types/tags";
 
 export default function App() {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
 
   const {
     tags,
@@ -44,7 +48,7 @@ export default function App() {
 
   useTagHotkeys({
     tags,
-    disabled: isManageOpen || isClearConfirmOpen,
+    disabled: isManageOpen || isClearConfirmOpen || (!isDesktop && isMobileTagsOpen),
     onInsertTag: insertTag,
     onTagInserted: announceTagInsertion,
   });
@@ -63,6 +67,8 @@ export default function App() {
     setIsClearConfirmOpen(false);
   };
 
+  const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
+
   return (
     <div className="min-h-screen bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 lg:gap-6">
@@ -73,7 +79,19 @@ export default function App() {
         />
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start xl:grid-cols-[22rem_minmax(0,1fr)]">
-          <div className="order-1 min-w-0 lg:order-2">
+          <div className="min-w-0 lg:order-2">
+            {!isDesktop ? (
+              <div className="mb-3">
+                <MobileTagsDrawer
+                  quickTags={quickTags}
+                  sections={sections}
+                  editorRef={editorRef}
+                  onInsertTag={insertTag}
+                  onReorderTag={reorderTag}
+                  onOpenStateChange={setIsMobileTagsOpen}
+                />
+              </div>
+            ) : null}
             <EditorPanel
               editorText={editorText}
               editorRef={editorRef}
@@ -83,9 +101,11 @@ export default function App() {
               onClearRequest={requestClear}
             />
           </div>
-          <div className="order-2 min-w-0 lg:order-1">
-            <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
-          </div>
+          {isDesktop ? (
+            <div className="min-w-0 lg:order-1">
+              <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
+            </div>
+          ) : null}
         </div>
       </div>
 

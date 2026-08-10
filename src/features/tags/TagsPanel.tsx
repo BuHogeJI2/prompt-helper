@@ -7,17 +7,37 @@ import type { ITagSection } from "@/features/tags/types";
 import type { TagDefinition, TagGroupId } from "@/types/tags";
 
 interface ITagsPanelProps {
+  variant?: "sidebar" | "sheet";
   sections: ITagSection[];
   onInsertTag: (tag: TagDefinition) => void;
   onReorderTag: (groupId: TagGroupId, fromIndex: number, toIndex: number) => void;
 }
 
-export default function TagsPanel({ sections, onInsertTag, onReorderTag }: ITagsPanelProps) {
+export default function TagsPanel({
+  variant = "sidebar",
+  sections,
+  onInsertTag,
+  onReorderTag,
+}: ITagsPanelProps) {
+  const isSheet = variant === "sheet";
+
   return (
     <Tooltip.Provider delayDuration={350} skipDelayDuration={150}>
-      <section className="rounded-[1.7rem] border border-white/60 bg-white/75 p-3.5 shadow-panel backdrop-blur md:p-4">
+      <section
+        className={
+          isSheet
+            ? "pb-1"
+            : "rounded-[1.7rem] border border-white/60 bg-white/75 p-3.5 shadow-panel backdrop-blur md:p-4"
+        }
+      >
         <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-          <h2 className="text-lg font-semibold text-cinder">Prompt blocks</h2>
+          {isSheet ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cinder/60">
+              Browse prompt blocks
+            </p>
+          ) : (
+            <h2 className="text-lg font-semibold text-cinder">Prompt blocks</h2>
+          )}
           <InfoPopover label="Prompt block help" title="Using prompt blocks">
             <p>Select a block to insert it at the editor cursor.</p>
             <p>Built-in blocks support Alt+Shift+letter shortcuts.</p>

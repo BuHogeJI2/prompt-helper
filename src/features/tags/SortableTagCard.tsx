@@ -12,6 +12,7 @@ interface ISortableTagCardProps {
   groupTitle: string;
   itemCount: number;
   isReorderable: boolean;
+  instructionId: string;
   onInsertTag: (tag: TagDefinition) => void;
   onHandleRef: (tagId: string, element: HTMLButtonElement | null) => void;
 }
@@ -22,6 +23,7 @@ export default function SortableTagCard({
   groupTitle,
   itemCount,
   isReorderable,
+  instructionId,
   onInsertTag,
   onHandleRef,
 }: ISortableTagCardProps) {
@@ -92,6 +94,7 @@ export default function SortableTagCard({
           ref={setHandleRef}
           type="button"
           aria-label={`Reorder ${tag.label} block`}
+          aria-describedby={instructionId}
           className={`inline-flex size-10 shrink-0 touch-none items-center justify-center rounded-full border text-cinder transition focus:outline-none focus:ring-2 focus:ring-ember/40 motion-reduce:transition-none ${
             isDragSource
               ? "cursor-grabbing border-ember/40 bg-ember/15 shadow-soft"

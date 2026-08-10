@@ -28,10 +28,30 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "overlay-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "overlay-out": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        "sheet-up": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" },
+        },
+        "sheet-down": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 220ms ease-out",
         "accordion-up": "accordion-up 200ms ease-in",
+        "overlay-in": "overlay-in 180ms ease-out",
+        "overlay-out": "overlay-out 150ms ease-in",
+        "sheet-up": "sheet-up 240ms ease-out",
+        "sheet-down": "sheet-down 180ms ease-in",
       },
     },
   },

@@ -23,7 +23,7 @@ globalThis.ResizeObserver ??= ResizeObserverMock;
 globalThis.IntersectionObserver ??= IntersectionObserverMock;
 
 window.matchMedia ??= (query) => ({
-  matches: false,
+  matches: query === "(min-width: 1024px)",
   media: query,
   onchange: null,
   addEventListener() {},
