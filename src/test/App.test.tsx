@@ -23,8 +23,8 @@ const createRect = (left: number, top: number, width: number, height: number): D
 const mockTagCardLayout = () => {
   const viewportRect = createRect(0, 0, 1200, 800);
   const tagRects = new Map([
-    ["task", createRect(0, 0, 200, 100)],
-    ["output", createRect(220, 0, 200, 100)],
+    ["task", createRect(0, 0, 300, 52)],
+    ["output", createRect(0, 60, 300, 52)],
   ]);
 
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
@@ -109,6 +109,49 @@ describe("Prompt Helper", () => {
     expect(editor).toHaveValue("<TASK>\n\n</TASK>\n");
   });
 
+  it("shows compact tag controls and reveals supporting information on demand", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const insertTask = screen.getByRole("button", { name: "Insert Task block" });
+    expect(insertTask).toHaveTextContent("<TASK>");
+    expect(insertTask).toHaveTextContent("Alt+Shift+T");
+    expect(screen.queryByText("What should the model do?")).not.toBeInTheDocument();
+
+    const taskInformation = screen.getByRole("button", { name: "About <TASK>" });
+    await user.click(taskInformation);
+
+    const popover = screen.getByRole("dialog", { name: "Task" });
+    expect(within(popover).getByText("What should the model do?")).toBeInTheDocument();
+    expect(popover).toHaveTextContent("<TASK>");
+    expect(popover).toHaveTextContent("</TASK>");
+    expect(popover).toHaveTextContent("Keyboard shortcut: Alt+Shift+T");
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(popover).not.toBeInTheDocument());
+    expect(taskInformation).toHaveFocus();
+  });
+
+  it("keeps panel and group guidance behind information controls", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(
+      screen.queryByText("Select a block to insert it at the editor cursor."),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Prompt block help" }));
+    expect(screen.getByRole("dialog", { name: "Using prompt blocks" })).toHaveTextContent(
+      "Built-in blocks support Alt+Shift+letter shortcuts.",
+    );
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "About Core blocks" }));
+    expect(screen.getByRole("dialog", { name: "Core blocks" })).toHaveTextContent(
+      "Set the task and the required output shape first.",
+    );
+  });
+
   it("reorders a group with the keyboard and persists the announced result", async () => {
     mockTagCardLayout();
     const user = userEvent.setup();
@@ -119,7 +162,7 @@ describe("Prompt Helper", () => {
     await user.keyboard("{Enter}");
     await waitFor(() => expect(taskHandle).toHaveAttribute("aria-grabbed", "true"));
 
-    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{ArrowDown}");
     await user.keyboard("{Enter}");
 
     await waitFor(() => {
@@ -154,7 +197,7 @@ describe("Prompt Helper", () => {
     taskHandle.focus();
     await user.keyboard("[Space]");
     await waitFor(() => expect(taskHandle).toHaveAttribute("aria-grabbed", "true"));
-    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{ArrowDown}");
     await user.keyboard("{Escape}");
 
     await waitFor(() => {
@@ -193,12 +236,18 @@ describe("Prompt Helper", () => {
     );
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: /Custom tags/ }));
+    await user.click(screen.getByRole("button", { name: "Custom tags, 1 block" }));
 
     expect(screen.getByRole("button", { name: "Insert Custom tag block" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Reorder Custom tag block" }),
     ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "About <CUSTOM_TAG>" }));
+    const customTagInformation = screen.getByRole("dialog", { name: "Custom tag" });
+    expect(customTagInformation).toHaveTextContent("<CUSTOM_TAG>");
+    expect(customTagInformation).toHaveTextContent("</CUSTOM_TAG>");
+    expect(customTagInformation).not.toHaveTextContent("Keyboard shortcut:");
   });
 
   it("persists native editor input with the existing storage key", async () => {

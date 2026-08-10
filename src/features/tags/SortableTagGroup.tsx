@@ -130,10 +130,7 @@ export default function SortableTagGroup({
       ]}
       onDragEnd={handleDragEnd}
     >
-      <ul
-        aria-label={`${section.group.title} prompt blocks`}
-        className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3"
-      >
+      <ul aria-label={`${section.group.title} prompt blocks`} className="space-y-1.5">
         {section.tags.map((tag, index) => (
           <SortableTagCard
             key={tag.id}

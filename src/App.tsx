@@ -72,8 +72,8 @@ export default function App() {
           customTagsCount={customTagsCount}
         />
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:items-start">
-          <div className="order-1 xl:order-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start xl:grid-cols-[22rem_minmax(0,1fr)]">
+          <div className="order-1 min-w-0 lg:order-2">
             <EditorPanel
               editorText={editorText}
               editorRef={editorRef}
@@ -83,7 +83,7 @@ export default function App() {
               onClearRequest={requestClear}
             />
           </div>
-          <div className="order-2 xl:order-1">
+          <div className="order-2 min-w-0 lg:order-1">
             <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
           </div>
         </div>
