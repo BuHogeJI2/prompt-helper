@@ -4,7 +4,9 @@ Prompt Helper is a lightweight React + TypeScript single-page app for composing 
 
 ## Features
 
-- Grouped tag palette for common blocks (Task, Reference, Example, Criteria, etc.)
+- Compact, responsive tag palette with mobile quick actions and a full bottom drawer
+- Grouped prompt blocks for common needs (Task, Reference, Example, Criteria, etc.)
+- Pointer, touch, and keyboard block reordering within groups, with persisted order
 - Native textarea editing with reliable new lines, selection, paste, undo, and IME input
 - Tag insertion on a new line with the cursor placed inside the generated pair
 - `Alt+Shift+letter` shortcuts for built-in tags
@@ -53,8 +55,8 @@ src/
   components/              # shared header and confirmation UI
   features/
     editor/                # textarea UI and editor behavior
-    tags/                  # tag palette, management, state, and hotkeys
-  hooks/                   # shared UI behavior
+    tags/                  # responsive tag palette, sorting, management, state, and hotkeys
+  hooks/                   # shared status and responsive UI behavior
   constants/               # storage keys and built-in tag definitions
   types/                   # tag domain types
   utils/                   # storage and tag normalization helpers

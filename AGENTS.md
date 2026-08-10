@@ -4,7 +4,7 @@ This file is named `AGENTS.md`, which is the expected convention for agent instr
 
 ## Project summary
 
-Prompt Helper is a React + TypeScript SPA for composing AI prompts with structured tags. Built-in tags are grouped into collapsible sections beside a native textarea, can be inserted by click or keyboard shortcut, and always add an opening and closing block with the cursor placed between them. A primary "Quick copy" action copies the full editor content.
+Prompt Helper is a React + TypeScript SPA for composing AI prompts with structured tags. Built-in tags are grouped into collapsible sections in a compact desktop sidebar or mobile bottom drawer, can be inserted by click or keyboard shortcut, and always add an opening and closing block with the cursor placed between them. A primary "Quick copy" action copies the full editor content.
 
 ## Key behaviors
 
@@ -12,6 +12,7 @@ Prompt Helper is a React + TypeScript SPA for composing AI prompts with structur
 - Cursor is repositioned between tags after insertion.
 - Direct editing uses native textarea behavior for new lines, selection, paste, undo, and IME input.
 - Built-in tags are grouped by intent and expose `Alt + Shift + Letter` shortcuts.
+- Tags can be reordered within their group using pointer, touch, or keyboard controls.
 - Clearing the editor, deleting a tag, and resetting tags to defaults require confirmation.
 - Editor content and tag definitions are persisted to local storage.
 
@@ -27,12 +28,17 @@ Prompt Helper is a React + TypeScript SPA for composing AI prompts with structur
 - `src/features/editor/usePromptEditor.ts`: editor persistence, tag insertion, caret placement, copy, and clear behavior
 - `src/features/tags/useTagCollection.ts`: tag persistence, grouping, counts, and CRUD/reset operations
 - `src/features/tags/useTagHotkeys.ts`: built-in tag keyboard shortcuts
+- `src/features/tags/MobileTagsDrawer.tsx`: mobile quick actions and full-palette bottom drawer
+- `src/features/tags/SortableTagGroup.tsx`: drag-and-drop orchestration, announcements, persistence callbacks, and focus restoration
+- `src/features/tags/SortableTagCard.tsx`: compact insertion row, information control, and drag handle
+- `src/features/tags/InfoPopover.tsx`: accessible on-demand block and group guidance
 - `src/features/tags/ManageTagsModal.tsx`: tag-management dialog orchestration
 - `src/features/tags/TagList.tsx`: saved-tag selection list
 - `src/features/tags/TagEditor.tsx`: shared add/edit form, generated preview, and reset action
 - `src/features/tags/TagsPanel.tsx`: grouped tag palette and accordion UI
 - `src/components/ConfirmationDialog.tsx`: shared confirmation dialog used for destructive actions
 - `src/hooks/useTransientStatus.ts`: reusable timed status-message lifecycle
+- `src/hooks/useMediaQuery.ts`: responsive rendering without duplicate drag providers
 - `src/constants/tags.ts`: built-in tag definitions, groups, and shortcut metadata
 - `src/utils/storage.ts`: local storage load/save with backward-compatible normalization
 - `src/utils/tags.ts`: tag ID generation, tag-pair generation, storage normalization, shortcut labels
