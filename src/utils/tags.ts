@@ -1,7 +1,8 @@
-import { createDefaultTags, DEFAULT_TAGS_BY_ID } from "@/constants/tags";
+import { DEFAULT_TAGS_BY_ID, createDefaultTags } from "@/constants/tags";
 import type {
   LegacyTagDefinition,
   TagDefinition,
+  TagGroupId,
   TagShortcut,
   TagSource,
 } from "@/types/tags";
@@ -50,6 +51,38 @@ export const buildTagPair = (label: string) => {
     openTag: slug ? `<${slug}>` : "",
     closeTag: slug ? `</${slug}>` : "",
   };
+};
+
+export const reorderTagsWithinGroup = (
+  tags: TagDefinition[],
+  groupId: TagGroupId,
+  fromIndex: number,
+  toIndex: number,
+) => {
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex)) return tags;
+
+  const groupTags = tags.filter((tag) => tag.groupId === groupId);
+  const lastIndex = groupTags.length - 1;
+
+  if (fromIndex < 0 || fromIndex > lastIndex || toIndex < 0 || toIndex > lastIndex) return tags;
+  if (fromIndex === toIndex) return tags;
+
+  const reorderedGroupTags = [...groupTags];
+  const movedTag = reorderedGroupTags[fromIndex];
+  if (!movedTag) return tags;
+
+  reorderedGroupTags.splice(fromIndex, 1);
+  reorderedGroupTags.splice(toIndex, 0, movedTag);
+
+  let groupIndex = 0;
+
+  return tags.map((tag) => {
+    if (tag.groupId !== groupId) return tag;
+
+    const reorderedTag = reorderedGroupTags[groupIndex];
+    groupIndex += 1;
+    return reorderedTag ?? tag;
+  });
 };
 
 const normalizeBuiltInTag = (

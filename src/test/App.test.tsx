@@ -216,9 +216,10 @@ describe("Prompt Helper", () => {
     await waitFor(() => {
       const storedTags = JSON.parse(
         window.localStorage.getItem(STORAGE_KEYS.tags) ?? "[]",
-      ) as Array<{ source: string }>;
+      ) as Array<{ id: string; source: string }>;
       expect(storedTags).toHaveLength(createDefaultTags().length);
       expect(storedTags.some((tag) => tag.source === "user")).toBe(false);
+      expect(storedTags.map((tag) => tag.id)).toEqual(createDefaultTags().map((tag) => tag.id));
     });
   });
 

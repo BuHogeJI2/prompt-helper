@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { TAG_GROUPS, createDefaultTags } from "@/constants/tags";
 import type { ITagDraft } from "@/features/tags/types";
-import type { TagDefinition } from "@/types/tags";
+import type { TagDefinition, TagGroupId } from "@/types/tags";
 import { loadTags, saveTags } from "@/utils/storage";
-import { buildTagPair, createTagId } from "@/utils/tags";
+import { buildTagPair, createTagId, reorderTagsWithinGroup } from "@/utils/tags";
 
 const normalizeDraft = (draft: ITagDraft) => {
   const label = draft.label.trim();
@@ -81,6 +81,10 @@ export function useTagCollection() {
     setTags((current) => current.filter((tag) => tag.id !== id));
   }, []);
 
+  const reorderTag = useCallback((groupId: TagGroupId, fromIndex: number, toIndex: number) => {
+    setTags((current) => reorderTagsWithinGroup(current, groupId, fromIndex, toIndex));
+  }, []);
+
   const resetTags = useCallback(() => {
     setTags(createDefaultTags());
   }, []);
@@ -92,6 +96,7 @@ export function useTagCollection() {
     createTag,
     updateTag,
     deleteTag,
+    reorderTag,
     resetTags,
   };
 }
