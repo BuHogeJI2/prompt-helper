@@ -1,15 +1,16 @@
 import * as Accordion from "@radix-ui/react-accordion";
 
+import SortableTagGroup from "@/features/tags/SortableTagGroup";
 import type { ITagSection } from "@/features/tags/types";
-import type { TagDefinition } from "@/types/tags";
-import { formatShortcutLabel } from "@/utils/tags";
+import type { TagDefinition, TagGroupId } from "@/types/tags";
 
 interface ITagsPanelProps {
   sections: ITagSection[];
   onInsertTag: (tag: TagDefinition) => void;
+  onReorderTag: (groupId: TagGroupId, fromIndex: number, toIndex: number) => void;
 }
 
-export default function TagsPanel({ sections, onInsertTag }: ITagsPanelProps) {
+export default function TagsPanel({ sections, onInsertTag, onReorderTag }: ITagsPanelProps) {
   return (
     <section className="rounded-[1.7rem] border border-white/60 bg-white/75 p-4 shadow-panel backdrop-blur md:p-5">
       <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
@@ -20,12 +21,13 @@ export default function TagsPanel({ sections, onInsertTag }: ITagsPanelProps) {
           <div>
             <h2 className="text-xl font-semibold text-cinder">Choose a block.</h2>
             <p className="max-w-2xl text-sm leading-6 text-cinder/70">
-              Select a tag to insert it at the cursor.
+              Select a tag to insert it at the cursor, or use its handle to reorder the group.
             </p>
           </div>
         </div>
-        <div className="rounded-[1.2rem] border border-sand/80 bg-sand/60 px-3 py-2 text-xs font-medium text-cinder/72">
-          Use Alt+Shift+letter for built-in tags.
+        <div className="max-w-sm rounded-[1.2rem] border border-sand/80 bg-sand/60 px-3 py-2 text-xs font-medium leading-5 text-cinder/72">
+          Alt+Shift+letter inserts built-ins. To reorder, focus a handle and use Space, arrows, then
+          Space.
         </div>
       </div>
 
@@ -60,31 +62,11 @@ export default function TagsPanel({ sections, onInsertTag }: ITagsPanelProps) {
               </Accordion.Trigger>
             </Accordion.Header>
             <Accordion.Content className="border-t border-ink/8 px-4 pb-3 pt-3 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none md:px-5">
-              <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
-                {section.tags.map((tag) => {
-                  const shortcutLabel = tag.shortcut ? formatShortcutLabel(tag.shortcut) : null;
-
-                  return (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => onInsertTag(tag)}
-                      className="group flex min-h-[6.5rem] flex-col rounded-[1.15rem] border border-ink/10 bg-white px-3.5 py-3 text-left transition motion-safe:hover:-translate-y-0.5 hover:border-ember/35 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none"
-                    >
-                      <div className="flex flex-col items-start gap-2">
-                        <span className="text-sm font-semibold text-cinder">{tag.label}</span>
-                        {shortcutLabel ? (
-                          <span className="rounded-full bg-cinder px-2 py-1 text-[10px] font-semibold uppercase leading-4 tracking-[0.08em] text-white">
-                            {shortcutLabel}
-                          </span>
-                        ) : null}
-                      </div>
-                      <code className="mt-2 text-[11px] text-cinder/70">{tag.openTag}</code>
-                      <p className="mt-auto pt-2 text-xs leading-5 text-cinder/70">{tag.hint}</p>
-                    </button>
-                  );
-                })}
-              </div>
+              <SortableTagGroup
+                section={section}
+                onInsertTag={onInsertTag}
+                onReorderTag={onReorderTag}
+              />
             </Accordion.Content>
           </Accordion.Item>
         ))}

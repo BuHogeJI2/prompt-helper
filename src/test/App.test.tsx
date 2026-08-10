@@ -8,6 +8,37 @@ import { createDefaultTags } from "@/constants/tags";
 
 const getEditor = () => screen.getByRole("textbox", { name: "Prompt editor" });
 
+const createRect = (left: number, top: number, width: number, height: number): DOMRect => ({
+  x: left,
+  y: top,
+  left,
+  top,
+  width,
+  height,
+  right: left + width,
+  bottom: top + height,
+  toJSON: () => ({}),
+});
+
+const mockTagCardLayout = () => {
+  const viewportRect = createRect(0, 0, 1200, 800);
+  const tagRects = new Map([
+    ["task", createRect(0, 0, 200, 100)],
+    ["output", createRect(220, 0, 200, 100)],
+  ]);
+
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return tagRects.get(this.dataset.tagId ?? "") ?? viewportRect;
+  });
+};
+
+const getTagOrder = (groupTitle: string) =>
+  within(screen.getByRole("list", { name: `${groupTitle} prompt blocks` }))
+    .getAllByRole("listitem")
+    .map((item) => item.getAttribute("data-tag-id"));
+
 describe("Prompt Helper", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -55,7 +86,7 @@ describe("Prompt Helper", () => {
 
     await user.type(editor, "Replace me");
     editor.setSelectionRange(0, 7);
-    await user.click(screen.getByRole("button", { name: /Task/ }));
+    await user.click(screen.getByRole("button", { name: "Insert Task block" }));
 
     expect(editor).toHaveValue("<TASK>\n\n</TASK>\n me");
     expect(editor.selectionStart).toBe(7);
@@ -76,6 +107,98 @@ describe("Prompt Helper", () => {
     });
 
     expect(editor).toHaveValue("<TASK>\n\n</TASK>\n");
+  });
+
+  it("reorders a group with the keyboard and persists the announced result", async () => {
+    mockTagCardLayout();
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    const taskHandle = screen.getByRole("button", { name: "Reorder Task block" });
+
+    taskHandle.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(taskHandle).toHaveAttribute("aria-grabbed", "true"));
+
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(getTagOrder("Core blocks")).toEqual(["output", "task"]);
+      const storedTags = JSON.parse(
+        window.localStorage.getItem(STORAGE_KEYS.tags) ?? "[]",
+      ) as Array<{ groupId: string; id: string }>;
+      expect(storedTags.filter((tag) => tag.groupId === "core").map((tag) => tag.id)).toEqual([
+        "output",
+        "task",
+      ]);
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Reorder Task block" })).toHaveFocus(),
+    );
+    expect(document.getElementById("dnd-kit-announcement-tag-order-core")).toHaveTextContent(
+      "Task placed at position 2 of 2 in Core blocks.",
+    );
+
+    unmount();
+    render(<App />);
+    expect(getTagOrder("Core blocks")).toEqual(["output", "task"]);
+  });
+
+  it("cancels keyboard reordering without changing the stored order", async () => {
+    mockTagCardLayout();
+    const user = userEvent.setup();
+    render(<App />);
+    const taskHandle = screen.getByRole("button", { name: "Reorder Task block" });
+
+    taskHandle.focus();
+    await user.keyboard("[Space]");
+    await waitFor(() => expect(taskHandle).toHaveAttribute("aria-grabbed", "true"));
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(getTagOrder("Core blocks")).toEqual(["task", "output"]);
+      expect(document.getElementById("dnd-kit-announcement-tag-order-core")).toHaveTextContent(
+        "Reordering Task canceled. It remains at position 1 of 2 in Core blocks.",
+      );
+    });
+
+    const storedTags = JSON.parse(window.localStorage.getItem(STORAGE_KEYS.tags) ?? "[]") as Array<{
+      groupId: string;
+      id: string;
+    }>;
+    expect(storedTags.filter((tag) => tag.groupId === "core").map((tag) => tag.id)).toEqual([
+      "task",
+      "output",
+    ]);
+    await waitFor(() => expect(taskHandle).toHaveFocus());
+  });
+
+  it("does not expose a reorder handle for a one-item group", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      STORAGE_KEYS.tags,
+      JSON.stringify([
+        ...createDefaultTags(),
+        {
+          id: "custom-tag",
+          label: "Custom tag",
+          openTag: "<CUSTOM_TAG>",
+          closeTag: "</CUSTOM_TAG>",
+          groupId: "custom",
+          source: "user",
+        },
+      ]),
+    );
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /Custom tags/ }));
+
+    expect(screen.getByRole("button", { name: "Insert Custom tag block" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Reorder Custom tag block" }),
+    ).not.toBeInTheDocument();
   });
 
   it("persists native editor input with the existing storage key", async () => {
@@ -101,7 +224,9 @@ describe("Prompt Helper", () => {
 
     expect(editor).toHaveValue("First\nSecond");
     expect(writeText).toHaveBeenCalledWith("First\nSecond");
-    expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard.");
+    expect(screen.getByRole("status", { name: "Editor status" })).toHaveTextContent(
+      "Copied to clipboard.",
+    );
     expect(
       screen.queryByText("Copy status and editor safety actions show here."),
     ).not.toBeInTheDocument();

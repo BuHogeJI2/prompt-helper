@@ -43,6 +43,7 @@ export default function EditorPanel({
           </div>
           <p
             role="status"
+            aria-label="Editor status"
             aria-live="polite"
             aria-atomic="true"
             className="min-h-5 text-xs font-medium text-moss"

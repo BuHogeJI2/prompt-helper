@@ -14,8 +14,16 @@ export default function App() {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
-  const { tags, sections, customTagsCount, createTag, updateTag, deleteTag, resetTags } =
-    useTagCollection();
+  const {
+    tags,
+    sections,
+    customTagsCount,
+    createTag,
+    updateTag,
+    deleteTag,
+    reorderTag,
+    resetTags,
+  } = useTagCollection();
 
   const {
     editorText,
@@ -76,7 +84,7 @@ export default function App() {
             />
           </div>
           <div className="order-2 xl:order-1">
-            <TagsPanel sections={sections} onInsertTag={insertTag} />
+            <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
           </div>
         </div>
       </div>
