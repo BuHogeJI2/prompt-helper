@@ -28,7 +28,7 @@ export function usePromptEditor() {
   }, []);
 
   const insertTag = useCallback(
-    (tag: TagDefinition) => {
+    (tag: Pick<TagDefinition, "openTag" | "closeTag">) => {
       const editor = editorRef.current;
       const start = editor?.selectionStart ?? editorText.length;
       const end = editor?.selectionEnd ?? editorText.length;

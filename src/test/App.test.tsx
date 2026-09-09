@@ -158,6 +158,156 @@ describe("Prompt Helper", () => {
     expect(editor).toHaveValue("<TASK>\n\n</TASK>\n");
   });
 
+  it("inserts a one-time custom tag at the saved selection and focuses between its tags", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+    const storedTags = window.localStorage.getItem(STORAGE_KEYS.tags);
+
+    await user.type(editor, "Before replace after");
+    editor.setSelectionRange(7, 14);
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+
+    const popup = screen.getByRole("dialog", { name: "Insert custom tag" });
+    const input = within(popup).getByRole("textbox", { name: "Tag name" });
+    expect(input).toHaveFocus();
+    await user.keyboard("my tag");
+    expect(popup).toHaveTextContent("<MY_TAG>");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => expect(popup).not.toBeInTheDocument());
+    expect(editor).toHaveValue("Before \n<MY_TAG>\n\n</MY_TAG>\n after");
+    expect(editor).toHaveFocus();
+    expect(editor.selectionStart).toBe("Before \n<MY_TAG>\n".length);
+    expect(editor.selectionEnd).toBe(editor.selectionStart);
+    expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+    expect(window.localStorage.getItem(STORAGE_KEYS.tags)).toBe(storedTags);
+
+    await user.keyboard("Content");
+    expect(editor).toHaveValue("Before \n<MY_TAG>\nContent\n</MY_TAG>\n after");
+  });
+
+  it.each(["escape", "button"])(
+    "cancels custom tag insertion via %s and restores the selection",
+    async (method) => {
+      const user = userEvent.setup();
+      render(<App />);
+      const editor = getEditor() as HTMLTextAreaElement;
+
+      await user.type(editor, "Keep this text");
+      editor.setSelectionRange(5, 9, "backward");
+      await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+      await user.keyboard("discard");
+      if (method === "escape") {
+        await user.keyboard("{Escape}");
+      } else {
+        await user.click(screen.getByRole("button", { name: "Cancel" }));
+      }
+
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog", { name: "Insert custom tag" })).not.toBeInTheDocument(),
+      );
+      expect(editor).toHaveValue("Keep this text");
+      expect(editor).toHaveFocus();
+      expect(editor.selectionStart).toBe(5);
+      expect(editor.selectionEnd).toBe(9);
+      expect(editor.selectionDirection).toBe("backward");
+
+      await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+      expect(screen.getByRole("textbox", { name: "Tag name" })).toHaveValue("");
+    },
+  );
+
+  it("rejects empty or unsupported custom tag names and allows correcting them", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+    await user.click(editor);
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}{Enter}");
+
+    const input = screen.getByRole("textbox", { name: "Tag name" });
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toHaveTextContent("at least one English letter or number");
+    expect(editor).toHaveValue("");
+
+    await user.keyboard("---{Enter}");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(editor).toHaveValue("");
+    await user.clear(input);
+    await user.keyboard("  brief 2  ");
+    await user.click(screen.getByRole("button", { name: "Insert tag" }));
+
+    await waitFor(() => expect(editor).toHaveFocus());
+    expect(editor).toHaveValue("<BRIEF_2>\n\n</BRIEF_2>\n");
+    expect((editor as HTMLTextAreaElement).selectionStart).toBe(10);
+  });
+
+  it("disables built-in tag shortcuts while entering a custom tag", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+    await user.click(editor);
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+    await user.keyboard("{Alt>}{Shift>}[KeyT]{/Shift}{/Alt}");
+
+    expect(editor).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Tag name" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(editor).toHaveFocus());
+    await user.keyboard("{Alt>}{Shift>}[KeyT]{/Shift}{/Alt}");
+    expect(editor).toHaveValue("<TASK>\n\n</TASK>\n");
+  });
+
+  it("only opens the custom tag popup from the editor and ignores composition and repeated hotkeys", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+    const shortcut = { key: "U", code: "KeyU", altKey: true, shiftKey: true };
+
+    fireEvent.keyDown(window, shortcut);
+    expect(screen.queryByRole("dialog", { name: "Insert custom tag" })).not.toBeInTheDocument();
+
+    await user.click(editor);
+    for (const ignored of [
+      { isComposing: true },
+      { repeat: true },
+      { ctrlKey: true },
+      { metaKey: true },
+      { shiftKey: false },
+    ]) {
+      fireEvent.keyDown(editor, { ...shortcut, ...ignored });
+      expect(screen.queryByRole("dialog", { name: "Insert custom tag" })).not.toBeInTheDocument();
+    }
+
+    await user.click(screen.getByRole("button", { name: "Manage tags" }));
+    await user.click(screen.getByRole("button", { name: /Create new tag/ }));
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+    expect(screen.queryByRole("dialog", { name: "Insert custom tag" })).not.toBeInTheDocument();
+  });
+
+  it("does not submit a custom tag while Enter is confirming text composition", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+    await user.click(editor);
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}Draft");
+    const input = screen.getByRole("textbox", { name: "Tag name" });
+
+    const defaultAllowed = fireEvent.keyDown(input, {
+      key: "Enter",
+      code: "Enter",
+      isComposing: true,
+    });
+
+    expect(defaultAllowed).toBe(false);
+    expect(input).toHaveFocus();
+    expect(editor).toHaveValue("");
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(editor).toHaveFocus());
+    expect(editor).toHaveValue("<DRAFT>\n\n</DRAFT>\n");
+  });
+
   it("shows compact tag controls and reveals supporting information on demand", async () => {
     const user = userEvent.setup();
     render(<App />);

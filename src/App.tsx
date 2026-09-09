@@ -17,6 +17,7 @@ export default function App() {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
+  const [isCustomTagOpen, setIsCustomTagOpen] = useState(false);
 
   const {
     tags,
@@ -48,7 +49,8 @@ export default function App() {
 
   useTagHotkeys({
     tags,
-    disabled: isManageOpen || isClearConfirmOpen || (!isDesktop && isMobileTagsOpen),
+    disabled:
+      isManageOpen || isClearConfirmOpen || isCustomTagOpen || (!isDesktop && isMobileTagsOpen),
     onInsertTag: insertTag,
     onTagInserted: announceTagInsertion,
   });
@@ -99,6 +101,9 @@ export default function App() {
               onEditorTextChange={updateEditorText}
               onCopy={copyPrompt}
               onClearRequest={requestClear}
+              isCustomTagOpen={isCustomTagOpen}
+              onCustomTagOpenChange={setIsCustomTagOpen}
+              onInsertTag={insertTag}
             />
           </div>
           {isDesktop ? (

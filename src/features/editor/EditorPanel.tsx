@@ -1,5 +1,8 @@
 import type { RefObject } from "react";
 
+import CustomTagPopover from "@/features/editor/CustomTagPopover";
+import type { TagDefinition } from "@/types/tags";
+
 interface IEditorPanelProps {
   editorText: string;
   editorRef: RefObject<HTMLTextAreaElement | null>;
@@ -7,6 +10,9 @@ interface IEditorPanelProps {
   onEditorTextChange: (text: string) => void;
   onCopy: () => void;
   onClearRequest: () => void;
+  isCustomTagOpen: boolean;
+  onCustomTagOpenChange: (open: boolean) => void;
+  onInsertTag: (tag: Pick<TagDefinition, "openTag" | "closeTag">) => void;
 }
 
 export default function EditorPanel({
@@ -16,6 +22,9 @@ export default function EditorPanel({
   onEditorTextChange,
   onCopy,
   onClearRequest,
+  isCustomTagOpen,
+  onCustomTagOpenChange,
+  onInsertTag,
 }: IEditorPanelProps) {
   return (
     <section className="rounded-[2rem] border border-white/65 bg-white/80 p-5 shadow-panel backdrop-blur md:p-6">
@@ -53,18 +62,43 @@ export default function EditorPanel({
         </div>
       </div>
 
-      <textarea
-        ref={editorRef}
-        aria-label="Prompt editor"
-        value={editorText}
-        onChange={(event) => onEditorTextChange(event.target.value)}
-        placeholder="Start with a Task block, then layer the rest of the prompt around it."
-        className="mt-5 h-[58vh] min-h-[26rem] w-full resize-none rounded-[1.65rem] border border-ink/10 bg-[#fffdf9] p-5 text-sm leading-7 text-cinder shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-ember/45 focus:outline-none focus:ring-2 focus:ring-ember/25"
-      />
+      <CustomTagPopover
+        open={isCustomTagOpen}
+        onOpenChange={onCustomTagOpenChange}
+        editorRef={editorRef}
+        onInsertTag={onInsertTag}
+      >
+        <textarea
+          ref={editorRef}
+          aria-label="Prompt editor"
+          value={editorText}
+          onChange={(event) => onEditorTextChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (
+              event.nativeEvent.isComposing ||
+              event.repeat ||
+              !event.altKey ||
+              !event.shiftKey ||
+              event.ctrlKey ||
+              event.metaKey ||
+              event.code !== "KeyU"
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            onCustomTagOpenChange(true);
+          }}
+          aria-keyshortcuts="Alt+Shift+U"
+          placeholder="Start with a Task block, then layer the rest of the prompt around it."
+          className="mt-5 h-[58vh] min-h-[26rem] w-full resize-none rounded-[1.65rem] border border-ink/10 bg-[#fffdf9] p-5 text-sm leading-7 text-cinder shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-ember/45 focus:outline-none focus:ring-2 focus:ring-ember/25"
+        />
+      </CustomTagPopover>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-ink/8 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-6 text-cinder/70">
-          Use Enter for new lines and Alt+Shift+letter for built-in tags.
+          Use Enter for new lines, Alt+Shift+letter for built-in tags, and Alt+Shift+U for a custom
+          tag.
         </p>
         <button
           type="button"
