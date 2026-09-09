@@ -1,34 +1,46 @@
 type HeaderProps = {
   onManageTags: () => void;
-  totalTags: number;
-  customTagsCount: number;
+  onCopy: () => void;
+  isDesktop: boolean;
+  isPaletteOpen: boolean;
+  onTogglePalette: () => void;
 };
 
-export default function Header({ onManageTags, totalTags, customTagsCount }: HeaderProps) {
+export default function Header({
+  onManageTags,
+  onCopy,
+  isDesktop,
+  isPaletteOpen,
+  onTogglePalette,
+}: HeaderProps) {
   return (
-    <header className="flex flex-col gap-4 rounded-[1.6rem] border border-white/55 bg-white/60 p-4 shadow-panel backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-moss">Prompt Helper</p>
-        <h1 className="mt-1.5 text-2xl font-semibold leading-tight text-cinder sm:text-[1.75rem]">
-          Build structured prompts.
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-cinder/70">
-          Choose a block, write in place, and copy the finished prompt.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-        <p className="text-sm text-cinder/70">
-          <span className="font-semibold text-cinder">{totalTags}</span> tags
-          <span aria-hidden="true"> · </span>
-          <span className="font-semibold text-cinder">{customTagsCount}</span> custom
-        </p>
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/65 bg-white/80 px-3 py-2 shadow-soft sm:px-4">
+      <h1 className="mr-auto text-base font-semibold tracking-tight text-cinder">Prompt Helper</h1>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {isDesktop ? (
+          <button
+            type="button"
+            aria-expanded={isPaletteOpen}
+            aria-controls="tag-palette"
+            onClick={onTogglePalette}
+            className="rounded-lg border border-ink/10 px-3 py-2 text-sm font-medium text-cinder hover:bg-sand/55 focus:outline-none focus:ring-2 focus:ring-ember/30"
+          >
+            {isPaletteOpen ? "Hide blocks" : "Show blocks"}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={onManageTags}
-          className="inline-flex items-center justify-center rounded-full border border-cinder/10 bg-cinder px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cinder/92 focus:outline-none focus:ring-2 focus:ring-cinder/25 motion-reduce:transition-none"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-cinder/75 hover:bg-sand/55 focus:outline-none focus:ring-2 focus:ring-ember/30"
         >
           Manage tags
+        </button>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="rounded-lg bg-ember px-3 py-2 text-sm font-semibold text-ink hover:bg-ember/85 focus:outline-none focus:ring-2 focus:ring-ember/30 sm:px-4"
+        >
+          Copy prompt
         </button>
       </div>
     </header>

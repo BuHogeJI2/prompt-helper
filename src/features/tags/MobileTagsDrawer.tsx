@@ -73,7 +73,7 @@ export default function MobileTagsDrawer({
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <section
         aria-label="Prompt block shortcuts"
-        className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-[1.35rem] border border-white/60 bg-white/75 p-2 shadow-soft backdrop-blur"
+        className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-[1.35rem] border border-white/60 bg-white/75 p-2 shadow-soft backdrop-blur"
       >
         <div className="flex min-w-0 gap-1.5 overflow-x-auto">
           {quickTags.map((tag) => (

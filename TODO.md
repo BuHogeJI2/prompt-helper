@@ -2,10 +2,10 @@
 
 ## First priority: editor space and prompt navigation
 
-- Replace the introductory headings and tag counts with a compact toolbar.
-- Make the tag palette collapsible and let the editor use the remaining screen height.
-- Keep the Copy prompt action visible while editing long prompts.
-- Add an outline of sections in the current prompt, with click-to-jump navigation and a current-section highlight.
+- [x] Replace the introductory headings and tag counts with a compact toolbar.
+- [x] Make the tag palette collapsible and let the editor use the remaining screen height.
+- [x] Keep the Copy prompt action visible while editing long prompts.
+- [x] Add an outline of sections in the current prompt, with click-to-jump navigation and a current-section highlight.
 
 ## Organizing existing text
 

@@ -18,17 +18,10 @@ export default function App() {
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
   const [isCustomTagOpen, setIsCustomTagOpen] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(true);
 
-  const {
-    tags,
-    sections,
-    customTagsCount,
-    createTag,
-    updateTag,
-    deleteTag,
-    reorderTag,
-    resetTags,
-  } = useTagCollection();
+  const { tags, sections, createTag, updateTag, deleteTag, reorderTag, resetTags } =
+    useTagCollection();
 
   const {
     editorText,
@@ -40,6 +33,10 @@ export default function App() {
     insertTag,
     copyPrompt,
     clearPrompt,
+    outlineSections,
+    currentSection,
+    updateSelection,
+    navigateToSection,
   } = usePromptEditor();
 
   const announceTagInsertion = useCallback(
@@ -72,34 +69,37 @@ export default function App() {
   const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
 
   return (
-    <div className="min-h-screen bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5 lg:gap-6">
+    <div className="h-dvh overflow-hidden bg-page p-2 sm:p-3">
+      <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-2 sm:gap-3">
         <Header
           onManageTags={() => setIsManageOpen(true)}
-          totalTags={tags.length}
-          customTagsCount={customTagsCount}
+          onCopy={copyPrompt}
+          isDesktop={isDesktop}
+          isPaletteOpen={isPaletteOpen}
+          onTogglePalette={() => setIsPaletteOpen((open) => !open)}
         />
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start xl:grid-cols-[22rem_minmax(0,1fr)]">
-          <div className="min-w-0 lg:order-2">
+        <div className="flex min-h-0 flex-1 gap-3">
+          <div className="order-2 flex min-h-0 min-w-0 flex-1 flex-col gap-2">
             {!isDesktop ? (
-              <div className="mb-3">
-                <MobileTagsDrawer
-                  quickTags={quickTags}
-                  sections={sections}
-                  editorRef={editorRef}
-                  onInsertTag={insertTag}
-                  onReorderTag={reorderTag}
-                  onOpenStateChange={setIsMobileTagsOpen}
-                />
-              </div>
+              <MobileTagsDrawer
+                quickTags={quickTags}
+                sections={sections}
+                editorRef={editorRef}
+                onInsertTag={insertTag}
+                onReorderTag={reorderTag}
+                onOpenStateChange={setIsMobileTagsOpen}
+              />
             ) : null}
             <EditorPanel
               editorText={editorText}
               editorRef={editorRef}
               status={status}
               onEditorTextChange={updateEditorText}
-              onCopy={copyPrompt}
+              outlineSections={outlineSections}
+              currentSection={currentSection}
+              onSelectionChange={updateSelection}
+              onNavigate={navigateToSection}
               onClearRequest={requestClear}
               isCustomTagOpen={isCustomTagOpen}
               onCustomTagOpenChange={setIsCustomTagOpen}
@@ -107,7 +107,11 @@ export default function App() {
             />
           </div>
           {isDesktop ? (
-            <div className="min-w-0 lg:order-1">
+            <div
+              id="tag-palette"
+              hidden={!isPaletteOpen}
+              className="order-1 w-80 shrink-0 overflow-y-auto overscroll-contain"
+            >
               <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
             </div>
           ) : null}

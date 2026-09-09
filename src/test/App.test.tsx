@@ -468,7 +468,7 @@ describe("Prompt Helper", () => {
 
     await user.click(editor);
     await user.paste("First\nSecond");
-    await user.click(screen.getByRole("button", { name: "Quick copy" }));
+    await user.click(screen.getByRole("button", { name: "Copy prompt" }));
 
     expect(editor).toHaveValue("First\nSecond");
     expect(writeText).toHaveBeenCalledWith("First\nSecond");
@@ -478,6 +478,110 @@ describe("Prompt Helper", () => {
     expect(
       screen.queryByText("Copy status and editor safety actions show here."),
     ).not.toBeInTheDocument();
+  });
+
+  it("collapses the palette without losing editor state or disabling tag shortcuts", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+
+    await user.type(editor, "Keep this");
+    editor.setSelectionRange(4, 4);
+    await user.click(screen.getByRole("button", { name: "Hide blocks" }));
+
+    expect(screen.getByRole("button", { name: "Show blocks" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByRole("heading", { name: "Prompt blocks" })).not.toBeInTheDocument();
+    expect(editor).toHaveValue("Keep this");
+    expect(editor.selectionStart).toBe(4);
+    expect(screen.getByRole("button", { name: "Copy prompt" })).toBeVisible();
+    fireEvent.keyDown(window, { code: "KeyT", altKey: true, shiftKey: true });
+    expect(editor).toHaveValue("Keep\n<TASK>\n\n</TASK>\n this");
+
+    await user.click(screen.getByRole("button", { name: "Show blocks" }));
+    expect(screen.getByRole("button", { name: "Hide blocks" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Insert Task block" })).toBeVisible();
+  });
+
+  it("navigates repeated prompt sections and follows cursor movement without changing text", async () => {
+    const text =
+      "<TASK>\nDo this\n</TASK>\n\n<NOTE>\nFirst note\n</NOTE>\n\n<NOTE>\nSecond note\n</NOTE>\nOutside";
+    window.localStorage.setItem(STORAGE_KEYS.editor, text);
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+    const outline = screen.getByRole("navigation", { name: "Prompt outline" });
+    const [task, firstNote, secondNote] = within(outline).getAllByRole("button");
+
+    expect(task).toHaveAccessibleName("Go to TASK, line 1");
+    expect(firstNote).toHaveAccessibleName("Go to NOTE, line 5");
+    expect(secondNote).toHaveAccessibleName("Go to NOTE, line 9");
+    await user.click(secondNote);
+
+    expect(editor).toHaveFocus();
+    expect(editor.selectionStart).toBe(text.indexOf("Second note"));
+    expect(editor.selectionEnd).toBe(editor.selectionStart);
+    expect(secondNote).toHaveAttribute("aria-current", "location");
+    expect(task).not.toHaveAttribute("aria-current");
+    expect(editor).toHaveValue(text);
+    expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(text);
+
+    editor.setSelectionRange(text.indexOf("First note"), text.indexOf("First note"));
+    fireEvent.select(editor);
+    expect(firstNote).toHaveAttribute("aria-current", "location");
+    expect(secondNote).not.toHaveAttribute("aria-current");
+
+    editor.setSelectionRange(text.length, text.length);
+    fireEvent.select(editor);
+    expect(
+      within(outline)
+        .getAllByRole("button")
+        .every((button) => !button.hasAttribute("aria-current")),
+    ).toBe(true);
+  });
+
+  it("updates the outline after insertion, direct edits, and confirmed clearing", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor();
+    expect(screen.queryByRole("navigation", { name: "Prompt outline" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Insert Task block" }));
+    expect(screen.getByRole("button", { name: "Go to TASK, line 1" })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+
+    fireEvent.change(editor, { target: { value: "<CUSTOM>\nText\n</CUSTOM>" } });
+    expect(screen.getByRole("button", { name: "Go to CUSTOM, line 1" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Go to TASK, line 1" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear editor" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Clear editor" }),
+    );
+    expect(screen.queryByRole("navigation", { name: "Prompt outline" })).not.toBeInTheDocument();
+    expect(editor).toHaveValue("");
+  });
+
+  it("supports outline navigation and copying on small screens", async () => {
+    mockDesktopMedia(false);
+    window.localStorage.setItem(STORAGE_KEYS.editor, "<TASK>\nMobile task\n</TASK>");
+    const user = userEvent.setup();
+    render(<App />);
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    expect(screen.queryByRole("button", { name: "Hide blocks" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Go to TASK, line 1" }));
+    expect(getEditor()).toHaveFocus();
+    expect((getEditor() as HTMLTextAreaElement).selectionStart).toBe(7);
+    await user.click(screen.getByRole("button", { name: "Copy prompt" }));
+    expect(writeText).toHaveBeenCalledWith("<TASK>\nMobile task\n</TASK>");
   });
 
   it("clears editor content only after confirmation", async () => {

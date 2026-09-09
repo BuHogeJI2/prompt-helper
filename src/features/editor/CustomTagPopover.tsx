@@ -40,7 +40,7 @@ export default function CustomTagPopover({
 
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange} modal>
-      <div className="relative">
+      <div className="relative flex min-h-0 min-w-0 flex-1">
         {children}
         <Popover.Anchor className="absolute left-5 top-5" />
       </div>

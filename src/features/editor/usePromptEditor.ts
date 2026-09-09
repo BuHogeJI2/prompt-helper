@@ -1,14 +1,42 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import {
+  type PromptSection,
+  getCurrentSection,
+  getPromptSections,
+} from "@/features/editor/parsePromptSections";
+import { scrollToEditorPosition } from "@/features/editor/scrollToEditorPosition";
 import { useTransientStatus } from "@/hooks/useTransientStatus";
 import type { TagDefinition } from "@/types/tags";
 import { loadEditor, saveEditor } from "@/utils/storage";
 
 export function usePromptEditor() {
   const [editorText, setEditorText] = useState(() => loadEditor());
+  const [cursorPosition, setCursorPosition] = useState(0);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingSelectionRef = useRef<number | null>(null);
   const { status, showStatus } = useTransientStatus();
+  const outlineSections = useMemo(() => getPromptSections(editorText), [editorText]);
+  const currentSection = getCurrentSection(outlineSections, cursorPosition);
+
+  const updateSelection = useCallback(() => {
+    const editor = editorRef.current;
+    if (editor) {
+      setCursorPosition(
+        editor.selectionDirection === "backward" ? editor.selectionStart : editor.selectionEnd,
+      );
+    }
+  }, []);
+
+  const navigateToSection = useCallback((section: PromptSection) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const position = Math.min(section.contentStart, section.end);
+    editor.focus({ preventScroll: true });
+    editor.setSelectionRange(position, position);
+    scrollToEditorPosition(editor, position);
+    setCursorPosition(position);
+  }, []);
 
   useEffect(() => {
     saveEditor(editorText);
@@ -39,6 +67,7 @@ export function usePromptEditor() {
       const cursorPosition = (before + prefix + tag.openTag + "\n").length;
 
       pendingSelectionRef.current = cursorPosition;
+      setCursorPosition(cursorPosition);
       setEditorText(before + block + after);
     },
     [editorText],
@@ -60,6 +89,7 @@ export function usePromptEditor() {
 
   const clearPrompt = useCallback(() => {
     pendingSelectionRef.current = 0;
+    setCursorPosition(0);
     setEditorText("");
     showStatus("Editor cleared.");
   }, [showStatus]);
@@ -67,6 +97,10 @@ export function usePromptEditor() {
   return {
     editorText,
     editorRef,
+    outlineSections,
+    currentSection,
+    updateSelection,
+    navigateToSection,
     hasEditorContent: Boolean(editorText.trim()),
     status,
     showStatus,
