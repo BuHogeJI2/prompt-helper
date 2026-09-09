@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import {
+  type EditorSelection,
+  type MoveDirection,
+  getMoveTarget,
+  movePromptSection,
+  wrapPromptSelection,
+} from "@/features/editor/organizePrompt";
+import {
   type PromptSection,
   getCurrentSection,
   getPromptSections,
@@ -10,11 +17,20 @@ import { useTransientStatus } from "@/hooks/useTransientStatus";
 import type { TagDefinition } from "@/types/tags";
 import { loadEditor, saveEditor } from "@/utils/storage";
 
+function focusEditorSelection(editor: HTMLTextAreaElement | null, selection: EditorSelection) {
+  if (!editor) return;
+  const { start, end, direction } = selection;
+  editor.focus({ preventScroll: true });
+  editor.setSelectionRange(start, end, direction);
+  scrollToEditorPosition(editor, direction === "backward" ? start : end);
+}
+
 export function usePromptEditor() {
   const [editorText, setEditorText] = useState(() => loadEditor());
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [hasSelection, setHasSelection] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
-  const pendingSelectionRef = useRef<number | null>(null);
+  const pendingSelectionRef = useRef<EditorSelection | null>(null);
   const { status, showStatus } = useTransientStatus();
   const outlineSections = useMemo(() => getPromptSections(editorText), [editorText]);
   const currentSection = getCurrentSection(outlineSections, cursorPosition);
@@ -22,6 +38,7 @@ export function usePromptEditor() {
   const updateSelection = useCallback(() => {
     const editor = editorRef.current;
     if (editor) {
+      setHasSelection(editor.selectionStart !== editor.selectionEnd);
       setCursorPosition(
         editor.selectionDirection === "backward" ? editor.selectionStart : editor.selectionEnd,
       );
@@ -36,6 +53,7 @@ export function usePromptEditor() {
     editor.setSelectionRange(position, position);
     scrollToEditorPosition(editor, position);
     setCursorPosition(position);
+    setHasSelection(false);
   }, []);
 
   useEffect(() => {
@@ -45,11 +63,62 @@ export function usePromptEditor() {
   useLayoutEffect(() => {
     if (pendingSelectionRef.current === null) return;
 
-    const position = pendingSelectionRef.current;
+    const selection = pendingSelectionRef.current;
     pendingSelectionRef.current = null;
-    editorRef.current?.focus();
-    editorRef.current?.setSelectionRange(position, position);
+    focusEditorSelection(editorRef.current, selection);
   }, [editorText]);
+
+  const applyEdit = useCallback(
+    (edit: { text: string; selection: EditorSelection }) => {
+      if (edit.text === editorText) {
+        focusEditorSelection(editorRef.current, edit.selection);
+      } else {
+        pendingSelectionRef.current = edit.selection;
+      }
+      setCursorPosition(
+        edit.selection.direction === "backward" ? edit.selection.start : edit.selection.end,
+      );
+      setHasSelection(edit.selection.start !== edit.selection.end);
+      setEditorText(edit.text);
+    },
+    [editorText],
+  );
+
+  const wrapSelection = useCallback(
+    (tag: Pick<TagDefinition, "openTag" | "closeTag">) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const edit = wrapPromptSelection(
+        editorText,
+        {
+          start: editor.selectionStart,
+          end: editor.selectionEnd,
+          direction: editor.selectionDirection,
+        },
+        tag,
+      );
+      if (!edit) return;
+      applyEdit(edit);
+      showStatus("Selection wrapped.");
+    },
+    [editorText, applyEdit, showStatus],
+  );
+
+  const moveSection = useCallback(
+    (direction: MoveDirection) => {
+      const editor = editorRef.current;
+      if (!editor || !currentSection) return;
+      const edit = movePromptSection(editorText, outlineSections, currentSection, direction, {
+        start: editor.selectionStart,
+        end: editor.selectionEnd,
+        direction: editor.selectionDirection,
+      });
+      if (!edit) return;
+      applyEdit(edit);
+      showStatus(`${currentSection.name} moved ${direction}.`);
+    },
+    [editorText, outlineSections, currentSection, applyEdit, showStatus],
+  );
 
   const updateEditorText = useCallback((text: string) => {
     setEditorText(text);
@@ -66,11 +135,12 @@ export function usePromptEditor() {
       const block = `${prefix}${tag.openTag}\n\n${tag.closeTag}\n`;
       const cursorPosition = (before + prefix + tag.openTag + "\n").length;
 
-      pendingSelectionRef.current = cursorPosition;
-      setCursorPosition(cursorPosition);
-      setEditorText(before + block + after);
+      applyEdit({
+        text: before + block + after,
+        selection: { start: cursorPosition, end: cursorPosition, direction: "none" },
+      });
     },
-    [editorText],
+    [editorText, applyEdit],
   );
 
   const copyPrompt = useCallback(async () => {
@@ -88,8 +158,9 @@ export function usePromptEditor() {
   }, [editorText, showStatus]);
 
   const clearPrompt = useCallback(() => {
-    pendingSelectionRef.current = 0;
+    pendingSelectionRef.current = { start: 0, end: 0, direction: "none" };
     setCursorPosition(0);
+    setHasSelection(false);
     setEditorText("");
     showStatus("Editor cleared.");
   }, [showStatus]);
@@ -101,6 +172,11 @@ export function usePromptEditor() {
     currentSection,
     updateSelection,
     navigateToSection,
+    hasSelection,
+    wrapSelection,
+    moveSection,
+    canMoveUp: Boolean(getMoveTarget(outlineSections, currentSection, "up")),
+    canMoveDown: Boolean(getMoveTarget(outlineSections, currentSection, "down")),
     hasEditorContent: Boolean(editorText.trim()),
     status,
     showStatus,

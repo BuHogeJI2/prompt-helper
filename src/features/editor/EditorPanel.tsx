@@ -1,7 +1,8 @@
-import type { RefObject } from "react";
+import { type RefObject, useState } from "react";
 
 import CustomTagPopover from "@/features/editor/CustomTagPopover";
 import PromptOutline from "@/features/editor/PromptOutline";
+import type { MoveDirection } from "@/features/editor/organizePrompt";
 import type { PromptSection } from "@/features/editor/parsePromptSections";
 import type { TagDefinition } from "@/types/tags";
 
@@ -18,6 +19,12 @@ interface IEditorPanelProps {
   isCustomTagOpen: boolean;
   onCustomTagOpenChange: (open: boolean) => void;
   onInsertTag: (tag: Pick<TagDefinition, "openTag" | "closeTag">) => void;
+  tags: TagDefinition[];
+  hasSelection: boolean;
+  onWrapSelection: (tag: Pick<TagDefinition, "openTag" | "closeTag">) => void;
+  onMoveSection: (direction: MoveDirection) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }
 
 export default function EditorPanel({
@@ -33,19 +40,46 @@ export default function EditorPanel({
   isCustomTagOpen,
   onCustomTagOpenChange,
   onInsertTag,
+  tags,
+  hasSelection,
+  onWrapSelection,
+  onMoveSection,
+  canMoveUp,
+  canMoveDown,
 }: IEditorPanelProps) {
+  const [tagMode, setTagMode] = useState<"insert" | "wrap">("insert");
   return (
     <section
       aria-label="Prompt workspace"
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/65 bg-white/80 shadow-panel"
     >
+      <div className="flex shrink-0 items-center gap-3 border-b border-ink/8 px-3 py-2 sm:px-4">
+        <button
+          type="button"
+          disabled={!hasSelection}
+          onClick={() => {
+            setTagMode("wrap");
+            onCustomTagOpenChange(true);
+          }}
+          className="shrink-0 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-cinder hover:bg-sand/55 focus:outline-none focus:ring-2 focus:ring-ember/30 disabled:cursor-default disabled:opacity-40"
+        >
+          Wrap selection
+        </button>
+        <span className="text-xs text-cinder/60">
+          {hasSelection
+            ? "Choose a tag for the selected text."
+            : "Select text to wrap it in a tag."}
+        </span>
+      </div>
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div className="order-2 flex min-h-0 min-w-0 flex-1 lg:order-1">
           <CustomTagPopover
             open={isCustomTagOpen}
             onOpenChange={onCustomTagOpenChange}
             editorRef={editorRef}
-            onInsertTag={onInsertTag}
+            onInsertTag={tagMode === "wrap" ? onWrapSelection : onInsertTag}
+            mode={tagMode}
+            tags={tagMode === "wrap" ? tags : undefined}
           >
             <textarea
               ref={editorRef}
@@ -70,6 +104,7 @@ export default function EditorPanel({
                 }
 
                 event.preventDefault();
+                setTagMode("insert");
                 onCustomTagOpenChange(true);
               }}
               aria-keyshortcuts="Alt+Shift+U"
@@ -83,6 +118,9 @@ export default function EditorPanel({
             sections={outlineSections}
             currentSection={currentSection}
             onNavigate={onNavigate}
+            onMoveSection={onMoveSection}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
           />
         </div>
       </div>

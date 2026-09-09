@@ -5,11 +5,14 @@ export interface PromptSection {
   end: number;
   line: number;
   depth: number;
+  parentStart: number | null;
+  isComplete: boolean;
 }
 
 export function getPromptSections(text: string): PromptSection[] {
   const sections: PromptSection[] = [];
   const stack: PromptSection[] = [];
+  const malformed = new Set<PromptSection>();
   let offset = 0;
   let fence: { marker: string; length: number } | null = null;
 
@@ -37,14 +40,20 @@ export function getPromptSections(text: string): PromptSection[] {
             end: text.length + 1,
             line: lineIndex + 1,
             depth: stack.length,
+            parentStart: stack.at(-1)?.start ?? null,
+            isComplete: false,
           };
           sections.push(section);
           stack.push(section);
         } else {
           const matchIndex = stack.map((section) => section.name).lastIndexOf(tag[2]);
+          if (matchIndex !== stack.length - 1 || matchIndex < 0) {
+            stack.forEach((section) => malformed.add(section));
+          }
           if (matchIndex >= 0) {
             for (const section of stack.splice(matchIndex)) {
               section.end = section.name === tag[2] ? start + trimmed.length : start;
+              section.isComplete = section.name === tag[2] && !malformed.has(section);
             }
           }
         }

@@ -37,6 +37,11 @@ export default function App() {
     currentSection,
     updateSelection,
     navigateToSection,
+    hasSelection,
+    wrapSelection,
+    moveSection,
+    canMoveUp,
+    canMoveDown,
   } = usePromptEditor();
 
   const announceTagInsertion = useCallback(
@@ -104,6 +109,12 @@ export default function App() {
               isCustomTagOpen={isCustomTagOpen}
               onCustomTagOpenChange={setIsCustomTagOpen}
               onInsertTag={insertTag}
+              tags={tags}
+              hasSelection={hasSelection}
+              onWrapSelection={wrapSelection}
+              onMoveSection={moveSection}
+              canMoveUp={canMoveUp}
+              canMoveDown={canMoveDown}
             />
           </div>
           {isDesktop ? (

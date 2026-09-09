@@ -9,8 +9,8 @@
 
 ## Organizing existing text
 
-- Add an explicit Wrap selection in a tag action for organizing pasted notes or existing text.
-- Allow moving a complete prompt section up or down, including its content and tag pair.
+- [x] Add an explicit Wrap selection in a tag action for organizing pasted notes or existing text.
+- [x] Allow moving a complete prompt section up or down, including its content and tag pair.
 - Consider section folding if outline navigation is not enough for long prompts.
 
 ## Optional starting structures

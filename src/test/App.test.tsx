@@ -516,7 +516,9 @@ describe("Prompt Helper", () => {
     render(<App />);
     const editor = getEditor() as HTMLTextAreaElement;
     const outline = screen.getByRole("navigation", { name: "Prompt outline" });
-    const [task, firstNote, secondNote] = within(outline).getAllByRole("button");
+    const [task, firstNote, secondNote] = within(outline).getAllByRole("button", {
+      name: /^Go to /,
+    });
 
     expect(task).toHaveAccessibleName("Go to TASK, line 1");
     expect(firstNote).toHaveAccessibleName("Go to NOTE, line 5");
@@ -582,6 +584,136 @@ describe("Prompt Helper", () => {
     expect((getEditor() as HTMLTextAreaElement).selectionStart).toBe(7);
     await user.click(screen.getByRole("button", { name: "Copy prompt" }));
     expect(writeText).toHaveBeenCalledWith("<TASK>\nMobile task\n</TASK>");
+  });
+
+  it.each([true, false])("wraps selected notes with a saved tag on desktop=%s", async (desktop) => {
+    mockDesktopMedia(desktop);
+    window.localStorage.setItem(STORAGE_KEYS.editor, "Before notes after");
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+    const wrap = screen.getByRole("button", { name: "Wrap selection" });
+    expect(wrap).toBeDisabled();
+    editor.focus();
+    editor.setSelectionRange(7, 12, "backward");
+    fireEvent.select(editor);
+    await user.click(wrap);
+
+    const popup = screen.getByRole("dialog", { name: "Wrap selection in a tag" });
+    await user.selectOptions(within(popup).getByRole("combobox", { name: "Use tag" }), "task");
+    fireEvent.keyDown(window, { code: "KeyO", altKey: true, shiftKey: true });
+    expect(editor).toHaveValue("Before notes after");
+    await user.click(within(popup).getByRole("button", { name: "Wrap selection" }));
+
+    await waitFor(() => expect(popup).not.toBeInTheDocument());
+    expect(editor).toHaveValue("Before \n<TASK>\nnotes\n</TASK>\n after");
+    expect(editor).toHaveFocus();
+    expect(editor.value.slice(editor.selectionStart, editor.selectionEnd)).toBe("notes");
+    expect(editor.selectionDirection).toBe("backward");
+    expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+    expect(screen.getByRole("button", { name: "Go to TASK, line 2" })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+
+    await user.click(wrap);
+    expect(screen.getByRole("textbox", { name: "Tag name" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("wraps with a one-time name and keeps custom insertion behavior after wrapping", async () => {
+    window.localStorage.setItem(STORAGE_KEYS.editor, "Keep this");
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+    const storedTags = window.localStorage.getItem(STORAGE_KEYS.tags);
+    editor.focus();
+    editor.setSelectionRange(0, 9);
+    fireEvent.select(editor);
+    await user.click(screen.getByRole("button", { name: "Wrap selection" }));
+    await user.keyboard("my notes{Enter}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(editor).toHaveValue("<MY_NOTES>\nKeep this\n</MY_NOTES>\n");
+    expect(window.localStorage.getItem(STORAGE_KEYS.tags)).toBe(storedTags);
+
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+    await user.keyboard("{Alt>}{Shift>}[KeyU]{/Shift}{/Alt}");
+    expect(screen.getByRole("dialog", { name: "Insert custom tag" })).toBeInTheDocument();
+    await user.keyboard("next{Enter}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(editor).toHaveValue("<MY_NOTES>\nKeep this\n</MY_NOTES>\n<NEXT>\n\n</NEXT>\n");
+  });
+
+  it("cancels wrapping and restores the original backward selection", async () => {
+    window.localStorage.setItem(STORAGE_KEYS.editor, "Keep this text");
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+    editor.focus();
+    editor.setSelectionRange(5, 9, "backward");
+    fireEvent.select(editor);
+    await user.click(screen.getByRole("button", { name: "Wrap selection" }));
+    await user.keyboard("discard{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(editor).toHaveValue("Keep this text");
+    expect(editor).toHaveFocus();
+    expect(editor.selectionStart).toBe(5);
+    expect(editor.selectionEnd).toBe(9);
+    expect(editor.selectionDirection).toBe("backward");
+  });
+
+  it.each([true, false])(
+    "moves sections through the outline and retains the content selection on desktop=%s",
+    async (desktop) => {
+      mockDesktopMedia(desktop);
+      const first = "<TASK>\nFirst\n</TASK>";
+      const second = "<NOTE>\nSecond\n</NOTE>";
+      window.localStorage.setItem(STORAGE_KEYS.editor, `${first}\n\n${second}`);
+      const user = userEvent.setup();
+      render(<App />);
+      const editor = getEditor() as HTMLTextAreaElement;
+      const up = screen.getByRole("button", { name: "Move section up" });
+      const down = screen.getByRole("button", { name: "Move section down" });
+      expect(up).toBeDisabled();
+      await user.click(screen.getByRole("button", { name: "Go to NOTE, line 5" }));
+      expect(down).toBeDisabled();
+      const start = editor.value.indexOf("Second");
+      editor.setSelectionRange(start, start + 6, "backward");
+      fireEvent.select(editor);
+      await user.click(up);
+
+      expect(editor).toHaveValue(`${second}\n\n${first}`);
+      expect(editor).toHaveFocus();
+      expect(editor.value.slice(editor.selectionStart, editor.selectionEnd)).toBe("Second");
+      expect(editor.selectionDirection).toBe("backward");
+      expect(screen.getByRole("button", { name: "Go to NOTE, line 1" })).toHaveAttribute(
+        "aria-current",
+        "location",
+      );
+      expect(up).toBeDisabled();
+      expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+      await user.click(down);
+      expect(editor).toHaveValue(`${first}\n\n${second}`);
+    },
+  );
+
+  it("follows a moved section even when two sections have identical text", async () => {
+    const block = "<NOTE>\nSame\n</NOTE>";
+    window.localStorage.setItem(STORAGE_KEYS.editor, `${block}\n${block}`);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Go to NOTE, line 1" }));
+    await user.click(screen.getByRole("button", { name: "Move section down" }));
+    expect(getEditor()).toHaveFocus();
+    expect((getEditor() as HTMLTextAreaElement).selectionStart).toBe(
+      block.length + 1 + "<NOTE>\n".length,
+    );
+    expect(screen.getByRole("button", { name: "Go to NOTE, line 4" })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+    expect(screen.getByRole("button", { name: "Move section down" })).toBeDisabled();
   });
 
   it("clears editor content only after confirmation", async () => {
