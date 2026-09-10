@@ -74,7 +74,7 @@ export default function App() {
   const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
 
   return (
-    <div className="h-dvh overflow-hidden bg-page p-2 sm:p-3">
+    <div className="h-dvh overflow-hidden bg-canvas p-2 sm:p-3">
       <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-2 sm:gap-3">
         <Header
           onManageTags={() => setIsManageOpen(true)}

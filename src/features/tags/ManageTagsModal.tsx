@@ -136,26 +136,24 @@ export default function ManageTagsModal({
     <>
       <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/55 backdrop-blur-sm" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-canvas/80" />
           <Dialog.Content
             onOpenAutoFocus={(event) => {
               event.preventDefault();
               createButtonRef.current?.focus();
             }}
-            className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88vh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border border-white/40 bg-[#fcf7ef] shadow-[0_40px_90px_-45px_rgba(13,27,30,0.62)] focus:outline-none"
+            className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88vh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-control bg-surface focus:outline-none"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-ink/8 px-5 py-5 md:px-6">
+            <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-5 md:px-6">
               <div className="space-y-2">
-                <Dialog.Title className="text-2xl font-semibold text-cinder">
+                <Dialog.Title className="text-2xl font-semibold text-foreground">
                   Manage tags
                 </Dialog.Title>
-                <Dialog.Description className="max-w-2xl text-sm leading-6 text-cinder/70">
+                <Dialog.Description className="max-w-2xl text-sm leading-6 text-muted">
                   Create, edit, delete, or restore prompt blocks.
                 </Dialog.Description>
               </div>
-              <Dialog.Close className="rounded-full border border-ink/12 bg-white px-3 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none">
-                Close
-              </Dialog.Close>
+              <Dialog.Close className="button">Close</Dialog.Close>
             </div>
 
             <div className="grid min-h-0 flex-1 gap-0 overflow-hidden md:grid-cols-[18rem_minmax(0,1fr)]">

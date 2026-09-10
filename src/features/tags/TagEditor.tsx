@@ -32,20 +32,16 @@ export default function TagEditor({
   return (
     <div className="p-5 md:p-6">
       <div className="flex flex-col gap-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex w-fit items-center rounded-full border border-ink/12 bg-white px-3.5 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none md:hidden"
-        >
+        <button type="button" onClick={onBack} className="button w-fit md:hidden">
           <span aria-hidden="true">←</span>&nbsp; All tags
         </button>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cinder/65">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted">
               {selectedTag ? "Edit tag" : "New tag"}
             </p>
-            <h3 className="mt-1 text-xl font-semibold text-cinder">
+            <h3 className="mt-1 text-xl font-semibold text-foreground">
               {selectedTag ? selectedTag.label : "Create a custom tag"}
             </h3>
           </div>
@@ -53,7 +49,7 @@ export default function TagEditor({
             aria-live="polite"
             className={
               feedback
-                ? "rounded-full border border-moss/15 bg-moss/10 px-3 py-1 text-xs font-semibold text-moss"
+                ? "border border-success/40 bg-success/10 px-3 py-1 text-xs font-semibold text-success"
                 : "sr-only"
             }
           >
@@ -69,40 +65,37 @@ export default function TagEditor({
               onSubmit();
             }}
           >
-            <label className="block text-sm font-semibold text-cinder">
+            <label className="block text-sm font-semibold text-foreground">
               Tag
               <input
                 ref={tagInputRef}
                 value={draft.label}
                 onChange={(event) => onDraftChange({ ...draft, label: event.target.value })}
                 placeholder="Example: Writing brief"
-                className="mt-2 w-full rounded-[1.2rem] border border-ink/10 bg-white px-4 py-3 text-sm font-medium text-cinder focus:border-ember/35 focus:outline-none focus:ring-2 focus:ring-ember/20"
+                className="field mt-2 px-4 py-3"
               />
             </label>
 
-            <label className="block text-sm font-semibold text-cinder">
+            <label className="block text-sm font-semibold text-foreground">
               Hint
               <textarea
                 value={draft.hint}
                 onChange={(event) => onDraftChange({ ...draft, hint: event.target.value })}
                 rows={4}
                 placeholder="Describe when this tag should be used."
-                className="mt-2 w-full resize-none rounded-[1.2rem] border border-ink/10 bg-white px-4 py-3 text-sm leading-6 text-cinder focus:border-ember/35 focus:outline-none focus:ring-2 focus:ring-ember/20"
+                className="field mt-2 resize-none px-4 py-3 leading-6"
               />
             </label>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-ember/85 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none"
-              >
+              <button type="submit" className="button button-primary px-5 py-2.5">
                 {selectedTag ? "Save changes" : "Add tag"}
               </button>
               {selectedTag ? (
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="rounded-full border border-rose-300 bg-white px-5 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300/50 motion-reduce:transition-none"
+                  className="button button-danger px-5 py-2.5"
                 >
                   Delete tag
                 </button>
@@ -110,45 +103,41 @@ export default function TagEditor({
             </div>
           </form>
 
-          <div className="space-y-4 rounded-[1.5rem] border border-ink/10 bg-white p-4">
+          <div className="space-y-4 border border-line bg-surface p-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cinder/65">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">
                 Generated pair
               </p>
-              <p className="mt-2 text-sm leading-6 text-cinder/70">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 Open and close tags are always derived automatically from the tag name.
               </p>
             </div>
 
-            <div className="space-y-3 rounded-[1.2rem] bg-[#f7f2e8] p-4">
+            <div className="space-y-3 bg-canvas p-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/65">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                   Open
                 </p>
-                <code className="mt-1 block text-sm text-cinder">
+                <code className="mt-1 block text-sm text-foreground">
                   {preview.openTag || "<TAG_NAME>"}
                 </code>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cinder/65">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                   Close
                 </p>
-                <code className="mt-1 block text-sm text-cinder">
+                <code className="mt-1 block text-sm text-foreground">
                   {preview.closeTag || "</TAG_NAME>"}
                 </code>
               </div>
             </div>
 
-            <div className="rounded-[1.2rem] border border-ink/10 bg-[#fffaf2] p-4">
-              <p className="text-sm font-semibold text-cinder">Reset defaults</p>
-              <p className="mt-2 text-sm leading-6 text-cinder/70">
+            <div className="border border-line bg-canvas p-4">
+              <p className="text-sm font-semibold text-foreground">Reset defaults</p>
+              <p className="mt-2 text-sm leading-6 text-muted">
                 This restores the built-in tag set and removes custom tags and edits.
               </p>
-              <button
-                type="button"
-                onClick={onResetRequest}
-                className="mt-4 rounded-full border border-ink/12 bg-white px-4 py-2 text-sm font-semibold text-cinder transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none"
-              >
+              <button type="button" onClick={onResetRequest} className="button mt-4 px-4">
                 Reset defaults
               </button>
             </div>

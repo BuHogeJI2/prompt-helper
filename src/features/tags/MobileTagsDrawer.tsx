@@ -73,7 +73,7 @@ export default function MobileTagsDrawer({
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <section
         aria-label="Prompt block shortcuts"
-        className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-[1.35rem] border border-white/60 bg-white/75 p-2 shadow-soft backdrop-blur"
+        className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 border border-line bg-surface p-2"
       >
         <div className="flex min-w-0 gap-1.5 overflow-x-auto">
           {quickTags.map((tag) => (
@@ -82,7 +82,7 @@ export default function MobileTagsDrawer({
               type="button"
               aria-label={`Insert ${tag.label} block`}
               onClick={() => onInsertTag(tag)}
-              className="min-h-11 min-w-0 flex-1 truncate rounded-[0.95rem] border border-ink/10 bg-[#fffaf3] px-3 text-left text-xs font-medium text-cinder transition hover:border-ember/30 hover:bg-white focus:outline-none focus:ring-2 focus:ring-ember/35 motion-reduce:transition-none"
+              className="min-h-11 min-w-0 flex-1 truncate border border-control bg-canvas px-3 text-left text-xs font-medium text-foreground transition hover:border-accent hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none"
             >
               <code>{tag.openTag}</code>
             </button>
@@ -90,31 +90,27 @@ export default function MobileTagsDrawer({
         </div>
 
         <Dialog.Trigger asChild>
-          <button
-            type="button"
-            className="min-h-11 shrink-0 rounded-[0.95rem] bg-cinder px-3.5 text-xs font-semibold text-white transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-ember/40 focus:ring-offset-2 motion-reduce:transition-none"
-          >
+          <button type="button" className="button min-h-11 shrink-0">
             All blocks
           </button>
         </Dialog.Trigger>
       </section>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-[2px] data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in motion-reduce:animate-none" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-canvas/80 data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in motion-reduce:animate-none" />
         <Dialog.Content
           ref={contentRef}
           onCloseAutoFocus={handleCloseAutoFocus}
           onEscapeKeyDown={keepDrawerOpenDuringKeyboardDrag}
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85dvh] max-w-3xl flex-col rounded-t-[1.8rem] border border-b-0 border-white/70 bg-linen px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-panel outline-none data-[state=closed]:animate-sheet-down data-[state=open]:animate-sheet-up motion-reduce:animate-none sm:px-5"
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85dvh] max-w-3xl flex-col border border-b-0 border-control bg-surface px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 outline-none data-[state=closed]:animate-sheet-down data-[state=open]:animate-sheet-up motion-reduce:animate-none sm:px-5"
         >
-          <div aria-hidden="true" className="mx-auto h-1 w-12 rounded-full bg-cinder/20" />
+          <div aria-hidden="true" className="mx-auto h-1 w-12 bg-control" />
           <div className="flex min-h-14 items-center justify-between gap-3 px-1">
-            <Dialog.Title className="text-lg font-semibold text-cinder">All blocks</Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold text-foreground">
+              All blocks
+            </Dialog.Title>
             <Dialog.Close asChild>
-              <button
-                type="button"
-                className="inline-flex min-h-10 items-center rounded-full border border-ink/10 bg-white px-3.5 text-sm font-semibold text-cinder transition hover:border-ember/30 focus:outline-none focus:ring-2 focus:ring-ember/40 motion-reduce:transition-none"
-              >
+              <button type="button" className="button min-h-11">
                 Close
               </button>
             </Dialog.Close>

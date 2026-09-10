@@ -23,20 +23,14 @@ export default function TagsPanel({
 
   return (
     <Tooltip.Provider delayDuration={350} skipDelayDuration={150}>
-      <section
-        className={
-          isSheet
-            ? "pb-1"
-            : "rounded-[1.7rem] border border-white/60 bg-white/75 p-3.5 shadow-panel backdrop-blur md:p-4"
-        }
-      >
+      <section className={isSheet ? "pb-1" : "border border-line bg-surface p-3.5 md:p-4"}>
         <div className="flex min-h-10 items-center justify-between gap-3 px-1">
           {isSheet ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cinder/60">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted">
               Browse prompt blocks
             </p>
           ) : (
-            <h2 className="text-lg font-semibold text-cinder">Prompt blocks</h2>
+            <h2 className="text-lg font-semibold text-foreground">Prompt blocks</h2>
           )}
           <InfoPopover label="Prompt block help" title="Using prompt blocks">
             <p>Select a block to insert it at the editor cursor.</p>
@@ -58,24 +52,24 @@ export default function TagsPanel({
               <Accordion.Item
                 key={section.group.id}
                 value={section.group.id}
-                className="overflow-hidden rounded-[1.15rem] border border-ink/8 bg-[#fffaf3]"
+                className="overflow-hidden border border-line bg-canvas"
               >
                 <Accordion.Header className="flex items-center pr-2">
                   <Accordion.Trigger
                     aria-label={`${section.group.title}, ${itemCountLabel}`}
-                    className="group flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 rounded-l-[1.15rem] px-3 py-2 text-left transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ember/30 motion-reduce:transition-none"
+                    className="group flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none"
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="text-base font-semibold text-cinder">
+                      <span className="text-base font-semibold text-foreground">
                         {section.group.title}
                       </span>
-                      <span className="rounded-full border border-ink/10 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cinder/65">
+                      <span className="border border-line bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                         {section.tags.length}
                       </span>
                     </span>
                     <span
                       aria-hidden="true"
-                      className="text-xs text-cinder/65 transition group-data-[state=open]:rotate-180 motion-reduce:transition-none"
+                      className="text-xs text-muted transition group-data-[state=open]:rotate-180 motion-reduce:transition-none"
                     >
                       ▼
                     </span>
@@ -84,7 +78,7 @@ export default function TagsPanel({
                     <p>{section.group.description}</p>
                   </InfoPopover>
                 </Accordion.Header>
-                <Accordion.Content className="border-t border-ink/8 px-2.5 pb-2.5 pt-2.5 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
+                <Accordion.Content className="border-t border-line px-2.5 pb-2.5 pt-2.5 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
                   <SortableTagGroup
                     section={section}
                     onInsertTag={onInsertTag}

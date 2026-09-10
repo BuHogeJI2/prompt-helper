@@ -37,7 +37,7 @@ export default function InfoPopover({
             <button
               type="button"
               aria-label={label}
-              className={`inline-flex size-10 shrink-0 items-center justify-center rounded-full text-cinder/70 transition hover:bg-sand/70 hover:text-cinder focus:outline-none focus:ring-2 focus:ring-ember/35 motion-reduce:transition-none ${triggerClassName}`}
+              className={`inline-flex size-10 shrink-0 items-center justify-center text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none ${triggerClassName}`}
             >
               <svg
                 aria-hidden="true"
@@ -54,10 +54,10 @@ export default function InfoPopover({
         <Tooltip.Portal>
           <Tooltip.Content
             sideOffset={6}
-            className="z-[70] rounded-lg bg-cinder px-2.5 py-1.5 text-xs font-medium text-white shadow-soft"
+            className="z-[70] border border-control bg-elevated px-2.5 py-1.5 text-xs font-medium text-foreground"
           >
             {label}
-            <Tooltip.Arrow className="fill-cinder" />
+            <Tooltip.Arrow className="fill-elevated" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
@@ -69,19 +69,19 @@ export default function InfoPopover({
           align="start"
           sideOffset={8}
           collisionPadding={12}
-          className="z-[60] w-[min(20rem,calc(100vw-2rem))] rounded-[1.1rem] border border-ink/10 bg-white p-4 text-cinder shadow-panel outline-none"
+          className="z-[60] w-[min(20rem,calc(100vw-2rem))] border border-control bg-surface p-4 text-foreground outline-none"
         >
           <div className="flex items-start justify-between gap-3">
             <h3 className="text-sm font-semibold">{title}</h3>
             <Popover.Close
               aria-label={`Close ${title}`}
-              className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-lg leading-none text-cinder/60 transition hover:bg-sand/70 hover:text-cinder focus:outline-none focus:ring-2 focus:ring-ember/35 motion-reduce:transition-none"
+              className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center text-lg leading-none text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none"
             >
               <span aria-hidden="true">×</span>
             </Popover.Close>
           </div>
-          <div className="mt-3 space-y-3 text-sm leading-6 text-cinder/75">{children}</div>
-          <Popover.Arrow className="fill-white" />
+          <div className="mt-3 space-y-3 text-sm leading-6 text-muted">{children}</div>
+          <Popover.Arrow className="fill-surface" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

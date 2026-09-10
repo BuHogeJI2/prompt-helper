@@ -80,7 +80,7 @@ export default function CustomTagPopover({
             editorRef.current?.focus();
             if (!insertedRef.current) restoreSelection();
           }}
-          className="z-[60] max-h-[var(--radix-popover-content-available-height)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-[1.1rem] border border-ink/10 bg-white p-4 text-cinder shadow-panel outline-none"
+          className="z-[60] max-h-[var(--radix-popover-content-available-height)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto border border-control bg-surface p-4 text-foreground outline-none"
         >
           <form
             className="space-y-3"
@@ -107,7 +107,7 @@ export default function CustomTagPopover({
                     setSelectedTagId(event.target.value);
                     setError("");
                   }}
-                  className="mt-2 w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember/20"
+                  className="field mt-2"
                 >
                   <option value="">Custom tag name</option>
                   {tags.map((tag) => (
@@ -137,33 +137,28 @@ export default function CustomTagPopover({
                   aria-describedby={error ? errorId : undefined}
                   placeholder="Example: My tag"
                   autoComplete="off"
-                  className="mt-2 w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm font-medium focus:border-ember/35 focus:outline-none focus:ring-2 focus:ring-ember/20"
+                  className="field mt-2 aria-[invalid=true]:border-danger"
                 />
               </label>
             ) : null}
-            <p id={descriptionId} className="text-xs leading-5 text-cinder/70">
+            <p id={descriptionId} className="text-xs leading-5 text-muted">
               {isWrapping
                 ? "Your selected text stays inside the tags. Escape to cancel."
                 : "Enter to insert. Escape to cancel. This tag is only added to your prompt."}
             </p>
             {pair.openTag ? (
-              <pre className="rounded-lg bg-sand/55 p-3 text-xs whitespace-pre-wrap break-all">
+              <pre className="bg-elevated p-3 text-xs whitespace-pre-wrap break-all">
                 {`${pair.openTag}\n${isWrapping ? "Selected text" : ""}\n${pair.closeTag}`}
               </pre>
             ) : null}
             {error ? (
-              <p id={errorId} role="alert" className="text-xs text-rose-900">
+              <p id={errorId} role="alert" className="text-xs text-danger">
                 {error}
               </p>
             ) : null}
             <div className="flex justify-end gap-2">
-              <Popover.Close className="rounded-full border border-ink/10 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ember/30">
-                Cancel
-              </Popover.Close>
-              <button
-                type="submit"
-                className="rounded-full bg-ember px-3 py-2 text-sm font-semibold text-ink hover:bg-ember/85 focus:outline-none focus:ring-2 focus:ring-ember/30"
-              >
+              <Popover.Close className="button">Cancel</Popover.Close>
+              <button type="submit" className="button button-primary">
                 {isWrapping ? "Wrap selection" : "Insert tag"}
               </button>
             </div>

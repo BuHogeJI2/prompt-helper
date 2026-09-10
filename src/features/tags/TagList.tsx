@@ -18,19 +18,19 @@ export default function TagList({
   onSelectTag,
 }: ITagListProps) {
   return (
-    <aside className="border-b border-ink/8 bg-white/55 p-4 md:border-b-0 md:border-r">
+    <aside className="border-b border-line bg-surface p-4 md:border-b-0 md:border-r">
       <button
         ref={createButtonRef}
         type="button"
         onClick={onCreateNew}
-        className={`w-full rounded-[1.2rem] border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none ${
+        className={`w-full border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none ${
           selectedId === null
-            ? "border-ember/35 bg-ember/10"
-            : "border-ink/10 bg-white hover:border-ink/15"
+            ? "border-accent bg-accent/10"
+            : "border-control bg-surface hover:border-muted hover:bg-hover"
         }`}
       >
-        <span className="block text-sm font-semibold text-cinder">Create new tag</span>
-        <span className="mt-1 block text-xs text-cinder/70">
+        <span className="block text-sm font-semibold text-foreground">Create new tag</span>
+        <span className="mt-1 block text-xs text-muted">
           Start a custom tag using the shared form.
         </span>
       </button>
@@ -41,17 +41,17 @@ export default function TagList({
             key={tag.id}
             type="button"
             onClick={() => onSelectTag(tag)}
-            className={`w-full rounded-[1.2rem] border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-ember/30 motion-reduce:transition-none ${
+            className={`w-full border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none ${
               selectedId === tag.id
-                ? "border-cinder bg-cinder text-white"
-                : "border-ink/10 bg-white hover:border-ink/15"
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-control bg-surface hover:border-muted hover:bg-hover"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold">{tag.label}</span>
               <span
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                  selectedId === tag.id ? "bg-white/15 text-white" : "bg-sand/75 text-cinder/70"
+                className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                  selectedId === tag.id ? "bg-surface text-foreground" : "bg-elevated text-muted"
                 }`}
               >
                 {tag.source === "builtin" ? "Built-in" : "Custom"}
@@ -59,7 +59,7 @@ export default function TagList({
             </div>
             <span
               className={`mt-2 block text-xs ${
-                selectedId === tag.id ? "text-white/80" : "text-cinder/70"
+                selectedId === tag.id ? "text-foreground" : "text-muted"
               }`}
             >
               {tag.openTag}

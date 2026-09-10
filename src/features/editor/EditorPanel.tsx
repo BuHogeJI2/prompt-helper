@@ -51,9 +51,9 @@ export default function EditorPanel({
   return (
     <section
       aria-label="Prompt workspace"
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/65 bg-white/80 shadow-panel"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-line bg-surface"
     >
-      <div className="flex shrink-0 items-center gap-3 border-b border-ink/8 px-3 py-2 sm:px-4">
+      <div className="flex shrink-0 items-center gap-3 border-b border-line px-3 py-2 sm:px-4">
         <button
           type="button"
           disabled={!hasSelection}
@@ -61,11 +61,11 @@ export default function EditorPanel({
             setTagMode("wrap");
             onCustomTagOpenChange(true);
           }}
-          className="shrink-0 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-cinder hover:bg-sand/55 focus:outline-none focus:ring-2 focus:ring-ember/30 disabled:cursor-default disabled:opacity-40"
+          className="button shrink-0 py-1.5"
         >
           Wrap selection
         </button>
-        <span className="text-xs text-cinder/60">
+        <span className="text-xs text-muted">
           {hasSelection
             ? "Choose a tag for the selected text."
             : "Select text to wrap it in a tag."}
@@ -109,7 +109,7 @@ export default function EditorPanel({
               }}
               aria-keyshortcuts="Alt+Shift+U"
               placeholder="Start with a Task block, then layer the rest of the prompt around it."
-              className="min-h-0 w-full flex-1 resize-none border-0 bg-[#fffdf9] p-4 text-sm leading-7 text-cinder focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ember/25 sm:p-5"
+              className="min-h-0 w-full flex-1 resize-none border-0 bg-canvas p-4 text-sm leading-7 text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent sm:p-5"
             />
           </CustomTagPopover>
         </div>
@@ -124,13 +124,13 @@ export default function EditorPanel({
           />
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-ink/8 px-3 py-2 text-xs text-cinder/60 sm:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-line px-3 py-2 text-xs text-muted sm:px-4">
         <p
           role="status"
           aria-label="Editor status"
           aria-live="polite"
           aria-atomic="true"
-          className="min-h-4 text-moss"
+          className="min-h-4 text-success"
         >
           {status}
         </p>
@@ -142,7 +142,7 @@ export default function EditorPanel({
           <button
             type="button"
             onClick={onClearRequest}
-            className="rounded-lg px-2 py-1.5 font-medium text-rose-900 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300/60"
+            className="button button-danger px-2 py-1.5"
           >
             Clear editor
           </button>
