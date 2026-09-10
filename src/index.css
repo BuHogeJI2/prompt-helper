@@ -5,6 +5,18 @@
 @tailwind utilities;
 
 :root {
+  --color-canvas: 18 18 20;
+  --color-surface: 24 24 27;
+  --color-elevated: 32 32 36;
+  --color-hover: 42 42 48;
+  --color-foreground: 232 232 237;
+  --color-muted: 163 163 175;
+  --color-line: 57 57 65;
+  --color-control: 112 112 125;
+  --color-accent: 133 213 223;
+  --color-accent-ink: 15 25 28;
+  --color-success: 157 216 160;
+  --color-danger: 242 150 158;
   color-scheme: light;
   font-family:
     "Sora",

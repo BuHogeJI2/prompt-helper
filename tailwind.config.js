@@ -3,7 +3,32 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        terminal: [
+          '"IBM Plex Mono"',
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          '"Liberation Mono"',
+          '"Courier New"',
+          "monospace",
+        ],
+      },
       colors: {
+        canvas: "rgb(var(--color-canvas) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        elevated: "rgb(var(--color-elevated) / <alpha-value>)",
+        hover: "rgb(var(--color-hover) / <alpha-value>)",
+        foreground: "rgb(var(--color-foreground) / <alpha-value>)",
+        muted: "rgb(var(--color-muted) / <alpha-value>)",
+        line: "rgb(var(--color-line) / <alpha-value>)",
+        control: "rgb(var(--color-control) / <alpha-value>)",
+        accent: "rgb(var(--color-accent) / <alpha-value>)",
+        "accent-ink": "rgb(var(--color-accent-ink) / <alpha-value>)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        danger: "rgb(var(--color-danger) / <alpha-value>)",
         ink: "#0d1b1e",
         cinder: "#1a1715",
         linen: "#f8f6f2",
