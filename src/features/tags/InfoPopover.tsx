@@ -37,7 +37,7 @@ export default function InfoPopover({
             <button
               type="button"
               aria-label={label}
-              className={`inline-flex size-10 shrink-0 items-center justify-center text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none ${triggerClassName}`}
+              className={`inline-flex size-11 shrink-0 items-center justify-center text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none lg:size-8 ${triggerClassName}`}
             >
               <svg
                 aria-hidden="true"
@@ -54,7 +54,7 @@ export default function InfoPopover({
         <Tooltip.Portal>
           <Tooltip.Content
             sideOffset={6}
-            className="z-[70] border border-control bg-elevated px-2.5 py-1.5 text-xs font-medium text-foreground"
+            className="z-[70] max-w-[calc(100vw-2rem)] border border-control bg-elevated px-2.5 py-1.5 text-xs font-medium text-foreground [overflow-wrap:anywhere]"
           >
             {label}
             <Tooltip.Arrow className="fill-elevated" />
@@ -69,18 +69,18 @@ export default function InfoPopover({
           align="start"
           sideOffset={8}
           collisionPadding={12}
-          className="z-[60] w-[min(20rem,calc(100vw-2rem))] border border-control bg-surface p-4 text-foreground outline-none"
+          className="z-[60] max-h-[var(--radix-popover-content-available-height)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto border border-control bg-surface p-3 text-foreground outline-none [overflow-wrap:anywhere]"
         >
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="text-sm font-semibold">{title}</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="min-w-0 text-sm font-medium">{title}</h3>
             <Popover.Close
               aria-label={`Close ${title}`}
-              className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center text-lg leading-none text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none"
+              className="-mr-1 -mt-1 inline-flex size-11 shrink-0 items-center justify-center text-lg leading-none text-muted transition hover:bg-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none lg:size-8"
             >
               <span aria-hidden="true">×</span>
             </Popover.Close>
           </div>
-          <div className="mt-3 space-y-3 text-sm leading-6 text-muted">{children}</div>
+          <div className="mt-2 space-y-3 text-xs leading-5 text-muted">{children}</div>
           <Popover.Arrow className="fill-surface" />
         </Popover.Content>
       </Popover.Portal>

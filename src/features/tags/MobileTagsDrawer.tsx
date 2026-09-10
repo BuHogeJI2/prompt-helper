@@ -73,7 +73,7 @@ export default function MobileTagsDrawer({
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <section
         aria-label="Prompt block shortcuts"
-        className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 border border-line bg-surface p-2"
+        className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 border-b border-line bg-surface p-2"
       >
         <div className="flex min-w-0 gap-1.5 overflow-x-auto">
           {quickTags.map((tag) => (
@@ -82,7 +82,7 @@ export default function MobileTagsDrawer({
               type="button"
               aria-label={`Insert ${tag.label} block`}
               onClick={() => onInsertTag(tag)}
-              className="min-h-11 min-w-0 flex-1 truncate border border-control bg-canvas px-3 text-left text-xs font-medium text-foreground transition hover:border-accent hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none"
+              className="min-h-11 min-w-0 flex-1 truncate border border-control bg-canvas px-2 text-left text-xs font-medium text-foreground transition hover:border-accent hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none"
             >
               <code>{tag.openTag}</code>
             </button>
@@ -106,9 +106,7 @@ export default function MobileTagsDrawer({
         >
           <div aria-hidden="true" className="mx-auto h-1 w-12 bg-control" />
           <div className="flex min-h-14 items-center justify-between gap-3 px-1">
-            <Dialog.Title className="text-lg font-semibold text-foreground">
-              All blocks
-            </Dialog.Title>
+            <Dialog.Title className="text-sm font-medium text-foreground">All blocks</Dialog.Title>
             <Dialog.Close asChild>
               <button type="button" className="button min-h-11">
                 Close

@@ -50,8 +50,8 @@ export default function SortableTagCard({
     <li
       ref={isReorderable ? ref : undefined}
       data-tag-id={tag.id}
-      className={`flex min-h-[3.25rem] items-center gap-1 border border-line bg-surface p-1.5 transition motion-reduce:transition-none ${
-        isDragSource ? "z-10 opacity-60" : ""
+      className={`flex min-h-11 items-center border-l-2 border-transparent bg-canvas transition motion-reduce:transition-none lg:min-h-9 ${
+        isDragSource ? "z-10 opacity-80" : ""
       } ${
         isDropTarget && !isDragSource ? "outline outline-2 outline-offset-2 outline-accent" : ""
       }`}
@@ -60,7 +60,7 @@ export default function SortableTagCard({
         type="button"
         aria-label={`Insert ${tag.label} block`}
         onClick={() => onInsertTag(tag)}
-        className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 px-2.5 text-left transition hover:bg-hover focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none"
+        className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-1.5 px-2 text-left transition hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none lg:min-h-9"
       >
         <code className="min-w-0 truncate text-xs font-medium text-foreground">{tag.openTag}</code>
         {shortcutLabel ? (
@@ -76,7 +76,7 @@ export default function SortableTagCard({
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             Generated block
           </p>
-          <code className="mt-2 block whitespace-pre-wrap text-xs leading-5 text-foreground">
+          <code className="mt-2 block whitespace-pre-wrap break-all text-xs leading-5 text-foreground">
             {`${tag.openTag}\n\n${tag.closeTag}`}
           </code>
         </div>
@@ -94,10 +94,10 @@ export default function SortableTagCard({
           type="button"
           aria-label={`Reorder ${tag.label} block`}
           aria-describedby={instructionId}
-          className={`inline-flex size-10 shrink-0 touch-none items-center justify-center border text-foreground transition focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none ${
+          className={`inline-flex size-11 shrink-0 touch-none items-center justify-center border text-muted transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none lg:size-8 ${
             isDragSource
               ? "cursor-grabbing border-accent bg-accent/15"
-              : "cursor-grab border-control bg-elevated hover:border-accent hover:bg-hover"
+              : "cursor-grab border-transparent hover:border-control hover:bg-hover hover:text-foreground"
           }`}
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-current">

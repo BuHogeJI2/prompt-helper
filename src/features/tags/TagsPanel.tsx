@@ -23,14 +23,16 @@ export default function TagsPanel({
 
   return (
     <Tooltip.Provider delayDuration={350} skipDelayDuration={150}>
-      <section className={isSheet ? "pb-1" : "border border-line bg-surface p-3.5 md:p-4"}>
-        <div className="flex min-h-10 items-center justify-between gap-3 px-1">
+      <section className={isSheet ? "pb-1" : "bg-surface p-2"}>
+        <div className="flex min-h-11 items-center justify-between gap-2 border-b border-line px-2">
           {isSheet ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted">
               Browse prompt blocks
             </p>
           ) : (
-            <h2 className="text-lg font-semibold text-foreground">Prompt blocks</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
+              Prompt blocks
+            </h2>
           )}
           <InfoPopover label="Prompt block help" title="Using prompt blocks">
             <p>Select a block to insert it at the editor cursor.</p>
@@ -42,7 +44,7 @@ export default function TagsPanel({
           </InfoPopover>
         </div>
 
-        <Accordion.Root type="multiple" defaultValue={["core"]} className="mt-3 space-y-2">
+        <Accordion.Root type="multiple" defaultValue={["core"]} className="mt-2 space-y-1">
           {sections.map((section) => {
             const itemCountLabel = `${section.tags.length} ${
               section.tags.length === 1 ? "block" : "blocks"
@@ -52,18 +54,18 @@ export default function TagsPanel({
               <Accordion.Item
                 key={section.group.id}
                 value={section.group.id}
-                className="overflow-hidden border border-line bg-canvas"
+                className="overflow-hidden border-b border-line last:border-b-0"
               >
-                <Accordion.Header className="flex items-center pr-2">
+                <Accordion.Header className="flex items-center">
                   <Accordion.Trigger
                     aria-label={`${section.group.title}, ${itemCountLabel}`}
-                    className="group flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none"
+                    className="group flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 px-2 py-2 text-left transition hover:bg-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent motion-reduce:transition-none lg:min-h-9"
                   >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="text-base font-semibold text-foreground">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 break-words text-xs font-medium text-foreground">
                         {section.group.title}
                       </span>
-                      <span className="border border-line bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                      <span className="shrink-0 text-[10px] tabular-nums text-muted">
                         {section.tags.length}
                       </span>
                     </span>
@@ -78,7 +80,7 @@ export default function TagsPanel({
                     <p>{section.group.description}</p>
                   </InfoPopover>
                 </Accordion.Header>
-                <Accordion.Content className="border-t border-line px-2.5 pb-2.5 pt-2.5 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
+                <Accordion.Content className="p-1 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
                   <SortableTagGroup
                     section={section}
                     onInsertTag={onInsertTag}

@@ -142,23 +142,23 @@ export default function ManageTagsModal({
               event.preventDefault();
               createButtonRef.current?.focus();
             }}
-            className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88vh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-control bg-surface focus:outline-none"
+            className="fixed left-1/2 top-1/2 z-[60] flex max-h-[88dvh] w-[min(94vw,72rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border border-control bg-surface focus:outline-none"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-5 md:px-6">
-              <div className="space-y-2">
-                <Dialog.Title className="text-2xl font-semibold text-foreground">
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-4 py-3">
+              <div className="min-w-0 space-y-1">
+                <Dialog.Title className="text-base font-medium text-foreground">
                   Manage tags
                 </Dialog.Title>
-                <Dialog.Description className="max-w-2xl text-sm leading-6 text-muted">
+                <Dialog.Description className="max-w-2xl text-xs leading-5 text-muted">
                   Create, edit, delete, or restore prompt blocks.
                 </Dialog.Description>
               </div>
-              <Dialog.Close className="button">Close</Dialog.Close>
+              <Dialog.Close className="button shrink-0">Close</Dialog.Close>
             </div>
 
             <div className="grid min-h-0 flex-1 gap-0 overflow-hidden md:grid-cols-[18rem_minmax(0,1fr)]">
               <div
-                className={`${isEditorView ? "hidden" : "block"} min-h-0 overflow-y-auto md:block`}
+                className={`${isEditorView ? "hidden" : "block"} min-h-0 min-w-0 overflow-y-auto md:block`}
               >
                 <TagList
                   tags={tags}
@@ -169,7 +169,7 @@ export default function ManageTagsModal({
                 />
               </div>
               <div
-                className={`${isEditorView ? "block" : "hidden"} min-h-0 overflow-y-auto md:block`}
+                className={`${isEditorView ? "block" : "hidden"} min-h-0 min-w-0 overflow-y-auto md:block`}
               >
                 <TagEditor
                   selectedTag={selectedTag}

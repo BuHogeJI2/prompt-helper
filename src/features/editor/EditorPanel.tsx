@@ -51,9 +51,9 @@ export default function EditorPanel({
   return (
     <section
       aria-label="Prompt workspace"
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-line bg-surface"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface"
     >
-      <div className="flex shrink-0 items-center gap-3 border-b border-line px-3 py-2 sm:px-4">
+      <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-3 py-1.5">
         <button
           type="button"
           disabled={!hasSelection}
@@ -65,7 +65,7 @@ export default function EditorPanel({
         >
           Wrap selection
         </button>
-        <span className="text-xs text-muted">
+        <span className="min-w-0 flex-1 text-xs leading-5 text-muted">
           {hasSelection
             ? "Choose a tag for the selected text."
             : "Select text to wrap it in a tag."}
@@ -109,7 +109,7 @@ export default function EditorPanel({
               }}
               aria-keyshortcuts="Alt+Shift+U"
               placeholder="Start with a Task block, then layer the rest of the prompt around it."
-              className="min-h-0 w-full flex-1 resize-none border-0 bg-canvas p-4 text-sm leading-7 text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent sm:p-5"
+              className="min-h-0 w-full flex-1 resize-none border-0 bg-canvas p-3 text-base leading-7 text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent sm:p-4 lg:text-sm lg:leading-6"
             />
           </CustomTagPopover>
         </div>
@@ -124,17 +124,17 @@ export default function EditorPanel({
           />
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-line px-3 py-2 text-xs text-muted sm:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-line px-3 py-1.5 text-xs text-muted">
         <p
           role="status"
           aria-label="Editor status"
           aria-live="polite"
           aria-atomic="true"
-          className="min-h-4 text-success"
+          className="min-h-4 min-w-0 flex-1 basis-40 break-words text-success"
         >
           {status}
         </p>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-1">
           <span className="hidden xl:inline">
             Alt+Shift+letter: built-in tags · Alt+Shift+U: custom tag
           </span>

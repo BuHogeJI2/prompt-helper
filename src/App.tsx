@@ -74,8 +74,8 @@ export default function App() {
   const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
 
   return (
-    <div className="h-dvh overflow-hidden bg-canvas p-2 sm:p-3">
-      <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-2 sm:gap-3">
+    <div className="h-dvh overflow-hidden bg-canvas p-2">
+      <div className="mx-auto flex h-full max-w-[1600px] flex-col border border-line bg-surface">
         <Header
           onManageTags={() => setIsManageOpen(true)}
           onCopy={copyPrompt}
@@ -84,8 +84,8 @@ export default function App() {
           onTogglePalette={() => setIsPaletteOpen((open) => !open)}
         />
 
-        <div className="flex min-h-0 flex-1 gap-3">
-          <div className="order-2 flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+        <div className="flex min-h-0 flex-1">
+          <div className="order-2 flex min-h-0 min-w-0 flex-1 flex-col">
             {!isDesktop ? (
               <MobileTagsDrawer
                 quickTags={quickTags}
@@ -121,7 +121,7 @@ export default function App() {
             <div
               id="tag-palette"
               hidden={!isPaletteOpen}
-              className="order-1 w-80 shrink-0 overflow-y-auto overscroll-contain"
+              className="order-1 w-80 shrink-0 overflow-y-auto overscroll-contain border-r border-line"
             >
               <TagsPanel sections={sections} onInsertTag={insertTag} onReorderTag={reorderTag} />
             </div>

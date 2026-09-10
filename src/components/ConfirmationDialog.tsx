@@ -41,18 +41,18 @@ export default function ConfirmationDialog({
             confirmFocusRef.current.focus();
             wasConfirmedRef.current = false;
           }}
-          className="fixed left-1/2 top-1/2 z-[80] w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 border border-control bg-surface p-6"
+          className="fixed left-1/2 top-1/2 z-[80] max-h-[90dvh] w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-control bg-surface p-4"
         >
           <div className="space-y-3">
-            <AlertDialog.Title className="text-2xl font-semibold text-foreground">
+            <AlertDialog.Title className="text-base font-medium text-foreground [overflow-wrap:anywhere]">
               {title}
             </AlertDialog.Title>
-            <AlertDialog.Description className="text-sm leading-6 text-muted">
+            <AlertDialog.Description className="text-xs leading-5 text-muted">
               {description}
             </AlertDialog.Description>
           </div>
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialog.Cancel className="button px-5">Cancel</AlertDialog.Cancel>
             <AlertDialog.Action
               onClick={() => {

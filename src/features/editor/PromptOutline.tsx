@@ -23,9 +23,9 @@ export default function PromptOutline({
   return (
     <nav
       aria-label="Prompt outline"
-      className="min-h-0 shrink-0 border-b border-line bg-elevated p-2 lg:flex lg:w-44 lg:flex-1 lg:shrink lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-l lg:p-3"
+      className="min-h-0 shrink-0 border-b border-line bg-surface p-2 lg:flex lg:w-44 lg:flex-1 lg:shrink lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-l"
     >
-      <h2 className="mb-2 shrink-0 px-2 text-xs font-semibold uppercase tracking-wider text-muted">
+      <h2 className="mb-1 shrink-0 px-2 text-[11px] font-medium uppercase tracking-wider text-muted">
         Outline
       </h2>
       <ol className="flex gap-1 overflow-x-auto lg:min-h-0 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
@@ -37,15 +37,18 @@ export default function PromptOutline({
               aria-current={currentSection === section ? "location" : undefined}
               onClick={() => onNavigate(section)}
               title={`${section.name} · Line ${section.line}`}
-              className={`flex w-full items-center gap-2 border-l-2 px-2 py-2 text-left text-xs transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent ${currentSection === section ? "border-accent bg-accent/15 font-semibold text-accent" : "border-transparent text-muted hover:bg-hover"}`}
+              className={`flex min-h-11 w-full items-center gap-2 border-l-2 px-2 py-1.5 text-left text-xs transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent lg:min-h-8 ${currentSection === section ? "border-accent bg-accent/15 font-semibold text-accent" : "border-transparent text-muted hover:bg-hover"}`}
             >
               {section.depth > 0 ? (
                 <span aria-hidden="true" className="text-muted">
                   ↳
                 </span>
               ) : null}
-              <span className="max-w-40 truncate lg:max-w-none">{section.name}</span>
-              <span aria-hidden="true" className="ml-auto text-[10px] tabular-nums text-muted">
+              <span className="min-w-0 max-w-40 truncate lg:max-w-none">{section.name}</span>
+              <span
+                aria-hidden="true"
+                className="ml-auto shrink-0 text-[10px] tabular-nums text-muted"
+              >
                 {section.line}
               </span>
             </button>

@@ -14,11 +14,9 @@ export default function Header({
   onTogglePalette,
 }: HeaderProps) {
   return (
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border border-line bg-surface px-3 py-2 sm:px-4">
-      <h1 className="mr-auto text-base font-semibold tracking-tight text-foreground">
-        Prompt Helper
-      </h1>
-      <div className="flex items-center gap-1.5 sm:gap-2">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line px-3 py-2">
+      <h1 className="mr-auto text-sm font-medium tracking-wide text-foreground">Prompt Helper</h1>
+      <div className="flex max-w-full flex-wrap items-center gap-2">
         {isDesktop ? (
           <button
             type="button"
