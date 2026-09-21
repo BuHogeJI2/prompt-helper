@@ -97,6 +97,83 @@ describe("Prompt Helper", () => {
     vi.restoreAllMocks();
   });
 
+  it.each([true, false])(
+    "loads an editable new task template and saves it on desktop=%s",
+    async (isDesktop) => {
+      mockDesktopMedia(isDesktop);
+      const user = userEvent.setup();
+      render(<App />);
+      const editor = getEditor() as HTMLTextAreaElement;
+
+      expect(editor).toHaveValue("");
+      await user.click(screen.getByRole("button", { name: "New task template" }));
+
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+      expect(editor.value).toMatch(
+        /^<TASK>\n\n<\/TASK>\n\n<DESCRIPTION>\n\n<\/DESCRIPTION>\n\n<CRITERIA>\n\n<\/CRITERIA>\n\n<NEXT_STEP>\n/,
+      );
+      expect(editor.value).toContain("Create the plan only after we agree");
+      expect(editor.value).toContain("Do not implement anything yet.\n</NEXT_STEP>");
+      expect(editor).toHaveFocus();
+      expect(editor.selectionStart).toBe("<TASK>\n".length);
+      expect(editor.selectionEnd).toBe(editor.selectionStart);
+
+      await user.keyboard("Add search");
+
+      expect(editor.value).toContain("<TASK>\nAdd search\n</TASK>");
+      expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+    },
+  );
+
+  it.each(["cancel", "escape"])(
+    "preserves the saved prompt when template replacement is dismissed with %s",
+    async (method) => {
+      window.localStorage.setItem(STORAGE_KEYS.editor, "Keep my draft");
+      const user = userEvent.setup();
+      render(<App />);
+      const editor = getEditor();
+
+      await user.click(screen.getByRole("button", { name: "New task template" }));
+      const dialog = screen.getByRole("alertdialog", { name: "Replace the current prompt?" });
+
+      expect(editor).toHaveValue("Keep my draft");
+      await user.keyboard("{Alt>}{Shift>}[KeyT]{/Shift}{/Alt}");
+      expect(editor).toHaveValue("Keep my draft");
+
+      if (method === "cancel") {
+        await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      } else {
+        await user.keyboard("{Escape}");
+      }
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(editor).toHaveValue("Keep my draft");
+      expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe("Keep my draft");
+      expect(screen.getByRole("button", { name: "New task template" })).toHaveFocus();
+    },
+  );
+
+  it("replaces a prompt only after confirmation and focuses inside Task", async () => {
+    window.localStorage.setItem(STORAGE_KEYS.editor, "Old draft");
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = getEditor() as HTMLTextAreaElement;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await user.click(screen.getByRole("button", { name: "New task template" }));
+      const dialog = screen.getByRole("alertdialog", { name: "Replace the current prompt?" });
+      await user.click(within(dialog).getByRole("button", { name: "Replace with template" }));
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(editor.value).toMatch(/^<TASK>\n\n<\/TASK>/);
+      expect(editor.value).not.toContain("Old draft");
+      expect(editor).toHaveFocus();
+      expect(editor.selectionStart).toBe("<TASK>\n".length);
+      expect(editor.selectionEnd).toBe(editor.selectionStart);
+      expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+    }
+  });
+
   it("creates exactly one immediately visible newline for each Enter press", async () => {
     const user = userEvent.setup();
     render(<App />);

@@ -16,6 +16,8 @@ interface IEditorPanelProps {
   onSelectionChange: () => void;
   onNavigate: (section: PromptSection) => void;
   onClearRequest: () => void;
+  onNewTaskTemplateRequest: () => void;
+  templateButtonRef: RefObject<HTMLButtonElement | null>;
   isCustomTagOpen: boolean;
   onCustomTagOpenChange: (open: boolean) => void;
   onInsertTag: (tag: Pick<TagDefinition, "openTag" | "closeTag">) => void;
@@ -37,6 +39,8 @@ export default function EditorPanel({
   onSelectionChange,
   onNavigate,
   onClearRequest,
+  onNewTaskTemplateRequest,
+  templateButtonRef,
   isCustomTagOpen,
   onCustomTagOpenChange,
   onInsertTag,
@@ -54,6 +58,14 @@ export default function EditorPanel({
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface"
     >
       <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-3 py-1.5">
+        <button
+          ref={templateButtonRef}
+          type="button"
+          onClick={onNewTaskTemplateRequest}
+          className="button shrink-0 py-1.5"
+        >
+          New task template
+        </button>
         <button
           type="button"
           disabled={!hasSelection}

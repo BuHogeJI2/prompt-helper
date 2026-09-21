@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import Header from "@/components/Header";
@@ -16,6 +16,8 @@ export default function App() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [isTemplateConfirmOpen, setIsTemplateConfirmOpen] = useState(false);
+  const templateButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
   const [isCustomTagOpen, setIsCustomTagOpen] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
@@ -33,6 +35,7 @@ export default function App() {
     insertTag,
     copyPrompt,
     clearPrompt,
+    loadNewTaskTemplate,
     outlineSections,
     currentSection,
     updateSelection,
@@ -52,7 +55,11 @@ export default function App() {
   useTagHotkeys({
     tags,
     disabled:
-      isManageOpen || isClearConfirmOpen || isCustomTagOpen || (!isDesktop && isMobileTagsOpen),
+      isManageOpen ||
+      isClearConfirmOpen ||
+      isTemplateConfirmOpen ||
+      isCustomTagOpen ||
+      (!isDesktop && isMobileTagsOpen),
     onInsertTag: insertTag,
     onTagInserted: announceTagInsertion,
   });
@@ -69,6 +76,20 @@ export default function App() {
   const handleClear = () => {
     clearPrompt();
     setIsClearConfirmOpen(false);
+  };
+
+  const requestNewTaskTemplate = () => {
+    if (hasEditorContent) {
+      setIsTemplateConfirmOpen(true);
+      return;
+    }
+
+    loadNewTaskTemplate();
+  };
+
+  const handleLoadTemplate = () => {
+    loadNewTaskTemplate();
+    setIsTemplateConfirmOpen(false);
   };
 
   const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
@@ -106,6 +127,8 @@ export default function App() {
               onSelectionChange={updateSelection}
               onNavigate={navigateToSection}
               onClearRequest={requestClear}
+              onNewTaskTemplateRequest={requestNewTaskTemplate}
+              templateButtonRef={templateButtonRef}
               isCustomTagOpen={isCustomTagOpen}
               onCustomTagOpenChange={setIsCustomTagOpen}
               onInsertTag={insertTag}
@@ -137,6 +160,17 @@ export default function App() {
         onUpdateTag={updateTag}
         onDeleteTag={deleteTag}
         onResetTags={resetTags}
+      />
+
+      <ConfirmationDialog
+        open={isTemplateConfirmOpen}
+        onOpenChange={setIsTemplateConfirmOpen}
+        title="Replace the current prompt?"
+        description="This replaces the current editor text with the New task template."
+        confirmLabel="Replace with template"
+        onConfirm={handleLoadTemplate}
+        confirmFocusRef={editorRef}
+        cancelFocusRef={templateButtonRef}
       />
 
       <ConfirmationDialog

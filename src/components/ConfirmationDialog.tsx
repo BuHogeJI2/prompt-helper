@@ -10,6 +10,7 @@ type ConfirmationDialogProps = {
   confirmLabel: string;
   onConfirm: () => void;
   confirmFocusRef?: RefObject<HTMLElement | null>;
+  cancelFocusRef?: RefObject<HTMLElement | null>;
 };
 
 export default function ConfirmationDialog({
@@ -20,6 +21,7 @@ export default function ConfirmationDialog({
   confirmLabel,
   onConfirm,
   confirmFocusRef,
+  cancelFocusRef,
 }: ConfirmationDialogProps) {
   const wasConfirmedRef = useRef(false);
 
@@ -35,11 +37,12 @@ export default function ConfirmationDialog({
         <AlertDialog.Overlay className="fixed inset-0 z-[70] bg-canvas/80" />
         <AlertDialog.Content
           onCloseAutoFocus={(event) => {
-            if (!wasConfirmedRef.current || !confirmFocusRef?.current) return;
+            const focusTarget = wasConfirmedRef.current ? confirmFocusRef : cancelFocusRef;
+            wasConfirmedRef.current = false;
+            if (!focusTarget?.current) return;
 
             event.preventDefault();
-            confirmFocusRef.current.focus();
-            wasConfirmedRef.current = false;
+            focusTarget.current.focus();
           }}
           className="fixed left-1/2 top-1/2 z-[80] max-h-[90dvh] w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-control bg-surface p-4"
         >
