@@ -1,5 +1,6 @@
 import { type RefObject, useState } from "react";
 
+import { PROMPT_TEMPLATES, type PromptTemplate } from "@/constants/templates";
 import CustomTagPopover from "@/features/editor/CustomTagPopover";
 import PromptOutline from "@/features/editor/PromptOutline";
 import type { MoveDirection } from "@/features/editor/organizePrompt";
@@ -16,7 +17,7 @@ interface IEditorPanelProps {
   onSelectionChange: () => void;
   onNavigate: (section: PromptSection) => void;
   onClearRequest: () => void;
-  onNewTaskTemplateRequest: () => void;
+  onTemplateRequest: (template: PromptTemplate) => void;
   templateButtonRef: RefObject<HTMLButtonElement | null>;
   isCustomTagOpen: boolean;
   onCustomTagOpenChange: (open: boolean) => void;
@@ -39,7 +40,7 @@ export default function EditorPanel({
   onSelectionChange,
   onNavigate,
   onClearRequest,
-  onNewTaskTemplateRequest,
+  onTemplateRequest,
   templateButtonRef,
   isCustomTagOpen,
   onCustomTagOpenChange,
@@ -52,20 +53,37 @@ export default function EditorPanel({
   canMoveDown,
 }: IEditorPanelProps) {
   const [tagMode, setTagMode] = useState<"insert" | "wrap">("insert");
+  const [selectedTemplateId, setSelectedTemplateId] = useState(PROMPT_TEMPLATES[0].id);
+  const selectedTemplate =
+    PROMPT_TEMPLATES.find((template) => template.id === selectedTemplateId) ?? PROMPT_TEMPLATES[0];
   return (
     <section
       aria-label="Prompt workspace"
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface"
     >
       <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-3 py-1.5">
-        <button
-          ref={templateButtonRef}
-          type="button"
-          onClick={onNewTaskTemplateRequest}
-          className="button shrink-0 py-1.5"
-        >
-          New task template
-        </button>
+        <div className="flex max-w-full flex-wrap items-center gap-2">
+          <select
+            aria-label="Prompt template"
+            value={selectedTemplateId}
+            onChange={(event) => setSelectedTemplateId(event.target.value)}
+            className="button min-w-0 max-w-full py-1.5"
+          >
+            {PROMPT_TEMPLATES.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+          <button
+            ref={templateButtonRef}
+            type="button"
+            onClick={() => onTemplateRequest(selectedTemplate)}
+            className="button shrink-0 py-1.5"
+          >
+            Load template
+          </button>
+        </div>
         <button
           type="button"
           disabled={!hasSelection}

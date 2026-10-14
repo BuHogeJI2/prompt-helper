@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { NEW_TASK_TEMPLATE } from "@/constants/templates";
+import type { PromptTemplate } from "@/constants/templates";
 import {
   type EditorSelection,
   type MoveDirection,
@@ -158,14 +158,17 @@ export function usePromptEditor() {
     }
   }, [editorText, showStatus]);
 
-  const loadNewTaskTemplate = useCallback(() => {
-    const position = NEW_TASK_TEMPLATE.indexOf("\n") + 1;
-    applyEdit({
-      text: NEW_TASK_TEMPLATE,
-      selection: { start: position, end: position, direction: "none" },
-    });
-    showStatus("New task template loaded.");
-  }, [applyEdit, showStatus]);
+  const loadTemplate = useCallback(
+    (template: PromptTemplate) => {
+      const position = template.text.indexOf("\n") + 1;
+      applyEdit({
+        text: template.text,
+        selection: { start: position, end: position, direction: "none" },
+      });
+      showStatus(`${template.name} template loaded.`);
+    },
+    [applyEdit, showStatus],
+  );
 
   const clearPrompt = useCallback(() => {
     pendingSelectionRef.current = { start: 0, end: 0, direction: "none" };
@@ -193,7 +196,7 @@ export function usePromptEditor() {
     updateEditorText,
     insertTag,
     copyPrompt,
-    loadNewTaskTemplate,
+    loadTemplate,
     clearPrompt,
   };
 }

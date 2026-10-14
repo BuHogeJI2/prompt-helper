@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import Header from "@/components/Header";
+import type { PromptTemplate } from "@/constants/templates";
 import EditorPanel from "@/features/editor/EditorPanel";
 import { usePromptEditor } from "@/features/editor/usePromptEditor";
 import ManageTagsModal from "@/features/tags/ManageTagsModal";
@@ -16,7 +17,7 @@ export default function App() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
-  const [isTemplateConfirmOpen, setIsTemplateConfirmOpen] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<PromptTemplate | null>(null);
   const templateButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
   const [isCustomTagOpen, setIsCustomTagOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function App() {
     insertTag,
     copyPrompt,
     clearPrompt,
-    loadNewTaskTemplate,
+    loadTemplate,
     outlineSections,
     currentSection,
     updateSelection,
@@ -57,7 +58,7 @@ export default function App() {
     disabled:
       isManageOpen ||
       isClearConfirmOpen ||
-      isTemplateConfirmOpen ||
+      Boolean(pendingTemplate) ||
       isCustomTagOpen ||
       (!isDesktop && isMobileTagsOpen),
     onInsertTag: insertTag,
@@ -78,18 +79,19 @@ export default function App() {
     setIsClearConfirmOpen(false);
   };
 
-  const requestNewTaskTemplate = () => {
+  const requestTemplate = (template: PromptTemplate) => {
     if (hasEditorContent) {
-      setIsTemplateConfirmOpen(true);
+      setPendingTemplate(template);
       return;
     }
 
-    loadNewTaskTemplate();
+    loadTemplate(template);
   };
 
   const handleLoadTemplate = () => {
-    loadNewTaskTemplate();
-    setIsTemplateConfirmOpen(false);
+    if (!pendingTemplate) return;
+    loadTemplate(pendingTemplate);
+    setPendingTemplate(null);
   };
 
   const quickTags = sections.find((section) => section.group.id === "core")?.tags.slice(0, 2) ?? [];
@@ -127,7 +129,7 @@ export default function App() {
               onSelectionChange={updateSelection}
               onNavigate={navigateToSection}
               onClearRequest={requestClear}
-              onNewTaskTemplateRequest={requestNewTaskTemplate}
+              onTemplateRequest={requestTemplate}
               templateButtonRef={templateButtonRef}
               isCustomTagOpen={isCustomTagOpen}
               onCustomTagOpenChange={setIsCustomTagOpen}
@@ -163,10 +165,12 @@ export default function App() {
       />
 
       <ConfirmationDialog
-        open={isTemplateConfirmOpen}
-        onOpenChange={setIsTemplateConfirmOpen}
+        open={Boolean(pendingTemplate)}
+        onOpenChange={(open) => {
+          if (!open) setPendingTemplate(null);
+        }}
         title="Replace the current prompt?"
-        description="This replaces the current editor text with the New task template."
+        description={`This replaces the current editor text with the ${pendingTemplate?.name ?? "selected"} template.`}
         confirmLabel="Replace with template"
         onConfirm={handleLoadTemplate}
         confirmFocusRef={editorRef}

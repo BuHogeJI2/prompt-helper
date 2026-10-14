@@ -8,6 +8,27 @@ import { createDefaultTags } from "@/constants/tags";
 
 const getEditor = () => screen.getByRole("textbox", { name: "Prompt editor" });
 
+const templateCases = [
+  {
+    templateName: "New task",
+    sections: ["TASK", "DESCRIPTION", "CRITERIA", "NEXT_STEP"],
+    instruction: "Do not implement anything yet.",
+  },
+  {
+    templateName: "Peer implementation",
+    sections: [
+      "TASK",
+      "DESCRIPTION",
+      "CRITERIA",
+      "WORKTREES",
+      "COLLABORATION",
+      "WORKFLOW",
+      "PERMISSIONS",
+    ],
+    instruction: "Do not push without my explicit permission.",
+  },
+];
+
 const createMediaQueryList = (query: string, matches: boolean): MediaQueryList => ({
   matches,
   media: query,
@@ -97,23 +118,40 @@ describe("Prompt Helper", () => {
     vi.restoreAllMocks();
   });
 
-  it.each([true, false])(
-    "loads an editable new task template and saves it on desktop=%s",
-    async (isDesktop) => {
+  it.each(
+    templateCases.flatMap((template) =>
+      [true, false].map((isDesktop) => ({ ...template, isDesktop })),
+    ),
+  )(
+    "loads and saves an editable $templateName template on desktop=$isDesktop",
+    async ({ templateName, sections, instruction, isDesktop }) => {
       mockDesktopMedia(isDesktop);
       const user = userEvent.setup();
       render(<App />);
       const editor = getEditor() as HTMLTextAreaElement;
 
       expect(editor).toHaveValue("");
-      await user.click(screen.getByRole("button", { name: "New task template" }));
+      await user.selectOptions(
+        screen.getByRole("combobox", { name: "Prompt template" }),
+        templateName,
+      );
+      expect(editor).toHaveValue("");
+      await user.click(screen.getByRole("button", { name: "Load template" }));
 
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
       expect(editor.value).toMatch(
-        /^<TASK>\n\n<\/TASK>\n\n<DESCRIPTION>\n\n<\/DESCRIPTION>\n\n<CRITERIA>\n\n<\/CRITERIA>\n\n<NEXT_STEP>\n/,
+        /^<TASK>\n\n<\/TASK>\n\n<DESCRIPTION>\n\n<\/DESCRIPTION>\n\n<CRITERIA>\n\n<\/CRITERIA>\n\n/,
       );
-      expect(editor.value).toContain("Create the plan only after we agree");
-      expect(editor.value).toContain("Do not implement anything yet.\n</NEXT_STEP>");
+      expect(editor.value).toContain(instruction);
+      const outline = screen.getByRole("navigation", { name: "Prompt outline" });
+      expect(
+        within(outline)
+          .getAllByRole("button", { name: /^Go to / })
+          .map((button) => button.getAttribute("aria-label")?.split(",")[0]),
+      ).toEqual(sections.map((section) => `Go to ${section}`));
+      expect(screen.getByRole("status", { name: "Editor status" })).toHaveTextContent(
+        `${templateName} template loaded.`,
+      );
       expect(editor).toHaveFocus();
       expect(editor.selectionStart).toBe("<TASK>\n".length);
       expect(editor.selectionEnd).toBe(editor.selectionStart);
@@ -125,17 +163,26 @@ describe("Prompt Helper", () => {
     },
   );
 
-  it.each(["cancel", "escape"])(
-    "preserves the saved prompt when template replacement is dismissed with %s",
-    async (method) => {
+  it.each(
+    templateCases.flatMap((template) =>
+      ["cancel", "escape"].map((method) => ({ ...template, method })),
+    ),
+  )(
+    "preserves the saved prompt when $templateName replacement is dismissed with $method",
+    async ({ templateName, method }) => {
       window.localStorage.setItem(STORAGE_KEYS.editor, "Keep my draft");
       const user = userEvent.setup();
       render(<App />);
       const editor = getEditor();
 
-      await user.click(screen.getByRole("button", { name: "New task template" }));
+      await user.selectOptions(
+        screen.getByRole("combobox", { name: "Prompt template" }),
+        templateName,
+      );
+      await user.click(screen.getByRole("button", { name: "Load template" }));
       const dialog = screen.getByRole("alertdialog", { name: "Replace the current prompt?" });
 
+      expect(dialog).toHaveTextContent(`with the ${templateName} template.`);
       expect(editor).toHaveValue("Keep my draft");
       await user.keyboard("{Alt>}{Shift>}[KeyT]{/Shift}{/Alt}");
       expect(editor).toHaveValue("Keep my draft");
@@ -149,29 +196,56 @@ describe("Prompt Helper", () => {
       await waitFor(() => expect(dialog).not.toBeInTheDocument());
       expect(editor).toHaveValue("Keep my draft");
       expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe("Keep my draft");
-      expect(screen.getByRole("button", { name: "New task template" })).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Load template" })).toHaveFocus();
     },
   );
 
-  it("replaces a prompt only after confirmation and focuses inside Task", async () => {
-    window.localStorage.setItem(STORAGE_KEYS.editor, "Old draft");
+  it.each(templateCases)(
+    "confirms $templateName replacement and focuses inside Task",
+    async ({ templateName, instruction }) => {
+      window.localStorage.setItem(STORAGE_KEYS.editor, "Old draft");
+      const user = userEvent.setup();
+      render(<App />);
+      const editor = getEditor() as HTMLTextAreaElement;
+
+      await user.selectOptions(
+        screen.getByRole("combobox", { name: "Prompt template" }),
+        templateName,
+      );
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        await user.click(screen.getByRole("button", { name: "Load template" }));
+        const dialog = screen.getByRole("alertdialog", { name: "Replace the current prompt?" });
+        if (attempt === 0) expect(editor).toHaveValue("Old draft");
+        await user.click(within(dialog).getByRole("button", { name: "Replace with template" }));
+
+        await waitFor(() => expect(dialog).not.toBeInTheDocument());
+        expect(editor.value).toMatch(/^<TASK>\n\n<\/TASK>/);
+        expect(editor.value).not.toContain("Old draft");
+        expect(editor.value).toContain(instruction);
+        expect(editor).toHaveFocus();
+        expect(editor.selectionStart).toBe("<TASK>\n".length);
+        expect(editor.selectionEnd).toBe(editor.selectionStart);
+        expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
+      }
+    },
+  );
+
+  it("loads the newly selected template after cancelling a previous choice", async () => {
+    window.localStorage.setItem(STORAGE_KEYS.editor, "Keep my draft");
     const user = userEvent.setup();
     render(<App />);
+    const picker = screen.getByRole("combobox", { name: "Prompt template" });
+
+    await user.selectOptions(picker, "Peer implementation");
+    await user.click(screen.getByRole("button", { name: "Load template" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.selectOptions(picker, "New task");
+    await user.click(screen.getByRole("button", { name: "Load template" }));
+    await user.click(screen.getByRole("button", { name: "Replace with template" }));
+
     const editor = getEditor() as HTMLTextAreaElement;
-
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      await user.click(screen.getByRole("button", { name: "New task template" }));
-      const dialog = screen.getByRole("alertdialog", { name: "Replace the current prompt?" });
-      await user.click(within(dialog).getByRole("button", { name: "Replace with template" }));
-
-      await waitFor(() => expect(dialog).not.toBeInTheDocument());
-      expect(editor.value).toMatch(/^<TASK>\n\n<\/TASK>/);
-      expect(editor.value).not.toContain("Old draft");
-      expect(editor).toHaveFocus();
-      expect(editor.selectionStart).toBe("<TASK>\n".length);
-      expect(editor.selectionEnd).toBe(editor.selectionStart);
-      expect(window.localStorage.getItem(STORAGE_KEYS.editor)).toBe(editor.value);
-    }
+    expect(editor.value).toContain("<NEXT_STEP>");
+    expect(editor.value).not.toContain("<WORKTREES>");
   });
 
   it("creates exactly one immediately visible newline for each Enter press", async () => {
