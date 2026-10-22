@@ -9,25 +9,14 @@ import { createDefaultTags } from "@/constants/tags";
 const getEditor = () => screen.getByRole("textbox", { name: "Prompt editor" });
 
 const templateCases = [
-  {
-    templateName: "New task",
-    sections: ["TASK", "DESCRIPTION", "CRITERIA", "NEXT_STEP"],
-    instruction: "Do not implement anything yet.",
-  },
-  {
-    templateName: "Peer implementation",
-    sections: [
-      "TASK",
-      "DESCRIPTION",
-      "CRITERIA",
-      "WORKTREES",
-      "COLLABORATION",
-      "WORKFLOW",
-      "PERMISSIONS",
-    ],
-    instruction: "Do not push without my explicit permission.",
-  },
+  { templateName: "Bug", sections: ["TASK", "ISSUE", "DETAILS", "CRITERIA"] },
+  { templateName: "Feature", sections: ["TASK", "DETAILS", "CONSTRAINTS", "CRITERIA"] },
+  { templateName: "Refactor", sections: ["TASK", "REFERENCE", "CONSTRAINTS", "CRITERIA"] },
+  { templateName: "Question", sections: ["TASK", "REFERENCE", "OUTPUT"] },
 ];
+
+const toEmptyBlocks = (sections: string[]) =>
+  sections.map((section) => `<${section}>\n\n</${section}>\n`).join("\n");
 
 const createMediaQueryList = (query: string, matches: boolean): MediaQueryList => ({
   matches,
@@ -124,7 +113,7 @@ describe("Prompt Helper", () => {
     ),
   )(
     "loads and saves an editable $templateName template on desktop=$isDesktop",
-    async ({ templateName, sections, instruction, isDesktop }) => {
+    async ({ templateName, sections, isDesktop }) => {
       mockDesktopMedia(isDesktop);
       const user = userEvent.setup();
       render(<App />);
@@ -139,10 +128,7 @@ describe("Prompt Helper", () => {
       await user.click(screen.getByRole("button", { name: "Load template" }));
 
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-      expect(editor.value).toMatch(
-        /^<TASK>\n\n<\/TASK>\n\n<DESCRIPTION>\n\n<\/DESCRIPTION>\n\n<CRITERIA>\n\n<\/CRITERIA>\n\n/,
-      );
-      expect(editor.value).toContain(instruction);
+      expect(editor).toHaveValue(toEmptyBlocks(sections));
       const outline = screen.getByRole("navigation", { name: "Prompt outline" });
       expect(
         within(outline)
@@ -202,7 +188,7 @@ describe("Prompt Helper", () => {
 
   it.each(templateCases)(
     "confirms $templateName replacement and focuses inside Task",
-    async ({ templateName, instruction }) => {
+    async ({ templateName, sections }) => {
       window.localStorage.setItem(STORAGE_KEYS.editor, "Old draft");
       const user = userEvent.setup();
       render(<App />);
@@ -219,9 +205,7 @@ describe("Prompt Helper", () => {
         await user.click(within(dialog).getByRole("button", { name: "Replace with template" }));
 
         await waitFor(() => expect(dialog).not.toBeInTheDocument());
-        expect(editor.value).toMatch(/^<TASK>\n\n<\/TASK>/);
-        expect(editor.value).not.toContain("Old draft");
-        expect(editor.value).toContain(instruction);
+        expect(editor).toHaveValue(toEmptyBlocks(sections));
         expect(editor).toHaveFocus();
         expect(editor.selectionStart).toBe("<TASK>\n".length);
         expect(editor.selectionEnd).toBe(editor.selectionStart);
@@ -236,16 +220,16 @@ describe("Prompt Helper", () => {
     render(<App />);
     const picker = screen.getByRole("combobox", { name: "Prompt template" });
 
-    await user.selectOptions(picker, "Peer implementation");
+    await user.selectOptions(picker, "Bug");
     await user.click(screen.getByRole("button", { name: "Load template" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
-    await user.selectOptions(picker, "New task");
+    await user.selectOptions(picker, "Question");
     await user.click(screen.getByRole("button", { name: "Load template" }));
     await user.click(screen.getByRole("button", { name: "Replace with template" }));
 
     const editor = getEditor() as HTMLTextAreaElement;
-    expect(editor.value).toContain("<NEXT_STEP>");
-    expect(editor.value).not.toContain("<WORKTREES>");
+    expect(editor.value).toContain("<OUTPUT>");
+    expect(editor.value).not.toContain("<ISSUE>");
   });
 
   it("creates exactly one immediately visible newline for each Enter press", async () => {
