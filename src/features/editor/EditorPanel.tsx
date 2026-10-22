@@ -63,18 +63,26 @@ export default function EditorPanel({
     >
       <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-3 py-1.5">
         <div className="flex max-w-full flex-wrap items-center gap-2">
-          <select
-            aria-label="Prompt template"
-            value={selectedTemplateId}
-            onChange={(event) => setSelectedTemplateId(event.target.value)}
-            className="button min-w-0 max-w-full py-1.5"
-          >
-            {PROMPT_TEMPLATES.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
+          <span className="relative inline-flex min-w-0 max-w-full">
+            <select
+              aria-label="Prompt template"
+              value={selectedTemplateId}
+              onChange={(event) => setSelectedTemplateId(event.target.value)}
+              className="button min-w-0 max-w-full appearance-none py-1.5 pr-8"
+            >
+              {PROMPT_TEMPLATES.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted"
+            >
+              ▼
+            </span>
+          </span>
           <button
             ref={templateButtonRef}
             type="button"
